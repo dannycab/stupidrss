@@ -437,14 +437,39 @@ docker-compose up -d</code></pre>
             <div class="mt-8 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">🐳 Docker Setup</h3>
                 <p class="text-gray-600 dark:text-gray-300 mb-4">
-                    The easiest way to run StupidRSS is with Docker Compose:
+                    The easiest way to run StupidRSS is with Docker Compose. Customize your deployment with environment variables:
                 </p>
-                <div class="bg-gray-900 dark:bg-gray-800 rounded p-4 text-green-400 text-sm font-mono">
-                    docker-compose up -d
+                <div class="bg-gray-900 dark:bg-gray-800 rounded p-4 text-green-400 text-sm font-mono mb-4">
+                    # Copy and customize environment variables (optional)
+cp .env.example .env
+
+# Start the application
+docker-compose up -d
                 </div>
-                <p class="text-gray-600 dark:text-gray-300 mt-4 text-sm">
+                <p class="text-gray-600 dark:text-gray-300 text-sm mb-4">
                     This will start the app on <strong>http://localhost:8000</strong> with persistent data storage.
                 </p>
+                
+                <div class="mt-4">
+                    <h4 class="text-md font-medium text-gray-900 dark:text-white mb-2">Environment Variables</h4>
+                    <div class="bg-gray-100 dark:bg-gray-800 rounded p-3 text-xs space-y-1">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600 dark:text-gray-400">PORT</span>
+                            <span class="text-gray-900 dark:text-white font-mono">8000</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600 dark:text-gray-400">DATA_VOLUME_PATH</span>
+                            <span class="text-gray-900 dark:text-white font-mono">./data</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600 dark:text-gray-400">DATABASE_URL</span>
+                            <span class="text-gray-900 dark:text-white font-mono">sqlite:///data/rss_reader.db</span>
+                        </div>
+                    </div>
+                    <p class="text-gray-500 dark:text-gray-400 text-xs mt-2">
+                        The .env file is not committed to the repository, allowing secure customization.
+                    </p>
+                </div>
             </div>
         </div>
     </div>

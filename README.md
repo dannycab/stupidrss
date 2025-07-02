@@ -51,6 +51,68 @@ A fast, minimalistic RSS reader webapp built with FastAPI and Tailwind CSS.
 
 4. **Add RSS feeds** and start reading!
 
+## Docker Deployment
+
+StupidRSS can be easily deployed using Docker with customizable environment variables.
+
+### Quick Docker Setup
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/dannycab/stupidrss.git
+   cd stupidrss
+   ```
+
+2. **Create your environment file** (optional):
+   ```bash
+   cp .env.example .env
+   ```
+
+3. **Customize your `.env` file** as needed:
+   ```bash
+   # Port to expose the application on
+   PORT=8000
+   
+   # Python path inside the container
+   PYTHONPATH=/app
+   
+   # Database URL (SQLite file path)
+   DATABASE_URL=sqlite:///data/rss_reader.db
+   
+   # Data volume path (host side)
+   DATA_VOLUME_PATH=./data
+   
+   # Container data path
+   CONTAINER_DATA_PATH=/app/data
+   ```
+
+4. **Start the application**:
+   ```bash
+   docker-compose up -d
+   ```
+
+5. **Access your RSS reader** at `http://localhost:8000` (or your configured port)
+
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PORT` | `8000` | Port to expose the application on your host |
+| `PYTHONPATH` | `/app` | Python path inside the container |
+| `DATABASE_URL` | `sqlite:///data/rss_reader.db` | Database connection string |
+| `DATA_VOLUME_PATH` | `./data` | Host directory for data persistence |
+| `CONTAINER_DATA_PATH` | `/app/data` | Container directory for data storage |
+
+### Docker Features
+
+- **Zero Configuration**: Works out of the box with sensible defaults
+- **Data Persistence**: SQLite database and data stored in mounted volume
+- **Environment Flexibility**: Customize ports, paths, and database location
+- **Health Checks**: Built-in health monitoring for container status
+- **Automatic Restart**: Container restarts automatically unless manually stopped
+
+The `.env` file is not committed to the repository, allowing you to customize your deployment without affecting the codebase.
+
 ## Screenshots
 
 ### Main Page - Feed Overview
