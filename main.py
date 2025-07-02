@@ -18,11 +18,10 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import func, select, update
 import uvicorn
 from contextlib import asynccontextmanager
 from pydantic import BaseModel
-from datetime import datetime
-from sqlalchemy import func, select, update
 from datetime import datetime
 
 from models.database import init_db, get_db
@@ -60,11 +59,12 @@ async def read_app(request: Request, db: AsyncSession = Depends(get_db)):
     """Main RSS reader application."""
     rss_service = RSSService(db)
     feeds = await rss_service.get_all_feeds()
+    feeds_by_category = await rss_service.get_feeds_by_category()
     recent_articles = await rss_service.get_recent_articles(limit=20)
     
     return templates.TemplateResponse(
         "index.html", 
-        {"request": request, "feeds": feeds, "articles": recent_articles}
+        {"request": request, "feeds": feeds, "feeds_by_category": feeds_by_category, "articles": recent_articles}
     )
 
 

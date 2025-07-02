@@ -77,8 +77,7 @@
             </div>
             {% if feeds %}
                 <!-- Group feeds by category -->
-                {% set feeds_by_category = feeds | groupby('category') %}
-                {% for category, category_feeds in feeds_by_category %}
+                {% for category, category_feeds in feeds_by_category.items() %}
                 <div class="mb-6 last:mb-0">
                     <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
                         {{ category }}
@@ -130,7 +129,25 @@
     <div class="lg:col-span-3">
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 transition-colors">
             <div class="p-6 border-b border-gray-200 dark:border-gray-700">
-                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Recent Articles</h2>
+                <div class="flex items-center justify-between">
+                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Recent Articles</h2>
+                    <div class="flex space-x-2">
+                        <button 
+                            onclick="filterArticles('all')"
+                            id="filter-all"
+                            class="px-3 py-1 text-sm rounded-full bg-primary dark:bg-blue-600 text-white"
+                        >
+                            All
+                        </button>
+                        <button 
+                            onclick="filterArticles('unread')"
+                            id="filter-unread"
+                            class="px-3 py-1 text-sm rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                        >
+                            Unread
+                        </button>
+                    </div>
+                </div>
             </div>
             
             {% if articles %}
@@ -315,6 +332,36 @@ async function toggleSave(articleId, currentlySaved) {
     } catch (error) {
         console.error('Error toggling save status:', error);
     }
+}
+
+// Filter articles by read status
+function filterArticles(filter) {
+    const allBtn = document.getElementById('filter-all');
+    const unreadBtn = document.getElementById('filter-unread');
+    const articles = document.querySelectorAll('article');
+    
+    // Update button styles
+    if (filter === 'all') {
+        allBtn.className = 'px-3 py-1 text-sm rounded-full bg-primary dark:bg-blue-600 text-white';
+        unreadBtn.className = 'px-3 py-1 text-sm rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors';
+    } else {
+        allBtn.className = 'px-3 py-1 text-sm rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors';
+        unreadBtn.className = 'px-3 py-1 text-sm rounded-full bg-primary dark:bg-blue-600 text-white';
+    }
+    
+    // Filter articles
+    articles.forEach(article => {
+        const readBtn = article.querySelector('[id^="read-btn-"]');
+        if (!readBtn) return;
+        
+        const isRead = readBtn.className.includes('bg-green-100');
+        
+        if (filter === 'all' || (filter === 'unread' && !isRead)) {
+            article.style.display = '';
+        } else {
+            article.style.display = 'none';
+        }
+    });
 }
 </script>
 {% endblock %}

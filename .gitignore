@@ -19,6 +19,10 @@ ENV/
 *.db
 *.sqlite3
 
+# Data directory (except README)
+data/*
+!data/README.md
+
 # IDE
 .vscode/settings.json
 .idea/
