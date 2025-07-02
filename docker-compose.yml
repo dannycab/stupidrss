@@ -6,13 +6,12 @@ services:
       - "8000:8000"
     volumes:
       - ./data:/app/data
-      - ./docs:/app/docs:ro
     environment:
       - PYTHONPATH=/app
       - DATABASE_URL=sqlite:///data/rss_reader.db
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/app"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
       interval: 30s
       timeout: 10s
       retries: 3
