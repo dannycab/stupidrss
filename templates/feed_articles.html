@@ -4,22 +4,22 @@
 
 {% block content %}
 <div class="mb-6">
-    <nav class="flex items-center space-x-2 text-sm text-gray-500 mb-4">
-        <a href="/" class="hover:text-primary transition-colors">Home</a>
+    <nav class="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400 mb-4">
+        <a href="/" class="hover:text-primary dark:hover:text-blue-400 transition-colors">Home</a>
         <span>/</span>
-        <span class="text-gray-900">{{ feed.title }}</span>
+        <span class="text-gray-900 dark:text-white">{{ feed.title }}</span>
     </nav>
     
     <div class="flex items-center justify-between">
         <div>
-            <h1 class="text-2xl font-bold text-gray-900">{{ feed.title }}</h1>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ feed.title }}</h1>
             {% if feed.description %}
-            <p class="text-gray-600 mt-2">{{ feed.description }}</p>
+            <p class="text-gray-600 dark:text-gray-300 mt-2">{{ feed.description }}</p>
             {% endif %}
         </div>
         <button 
             onclick="refreshFeed({{ feed.id }})"
-            class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center"
+            class="bg-primary dark:bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors flex items-center"
         >
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
@@ -29,29 +29,29 @@
     </div>
 </div>
 
-<div class="bg-white rounded-lg shadow-sm border border-gray-200">
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 transition-colors">
     {% if articles %}
-        <div class="divide-y divide-gray-100">
+        <div class="divide-y divide-gray-100 dark:divide-gray-700">
             {% for article in articles %}
-            <article class="p-6 hover:bg-gray-50 transition-colors">
+            <article class="p-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                 <div class="flex items-start justify-between">
                     <div class="flex-1">
-                        <h2 class="text-xl font-medium text-gray-900 mb-3">
+                        <h2 class="text-xl font-medium text-gray-900 dark:text-white mb-3">
                             <a href="{{ article.link }}" 
                                target="_blank" 
                                rel="noopener noreferrer"
-                               class="hover:text-primary transition-colors">
+                               class="hover:text-primary dark:hover:text-blue-400 transition-colors">
                                 {{ article.title }}
                             </a>
                         </h2>
                         
                         {% if article.description %}
-                        <p class="text-gray-600 mb-4 leading-relaxed">
+                        <p class="text-gray-600 dark:text-gray-300 mb-4 leading-relaxed">
                             {{ article.description }}
                         </p>
                         {% endif %}
                         
-                        <div class="flex items-center space-x-4 text-sm text-gray-500">
+                        <div class="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
                             {% if article.author %}
                             <span>by {{ article.author }}</span>
                             {% endif %}
@@ -63,7 +63,7 @@
                         <a href="{{ article.link }}" 
                            target="_blank" 
                            rel="noopener noreferrer"
-                           class="inline-flex items-center px-4 py-2 text-sm text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                           class="inline-flex items-center px-4 py-2 text-sm text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
                             Read Article
                             <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
@@ -76,10 +76,10 @@
         </div>
     {% else %}
         <div class="p-8 text-center">
-            <p class="text-gray-500">No articles found for this feed.</p>
+            <p class="text-gray-500 dark:text-gray-400">No articles found for this feed.</p>
             <button 
                 onclick="refreshFeed({{ feed.id }})"
-                class="mt-4 bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+                class="mt-4 bg-primary dark:bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors"
             >
                 Refresh Feed
             </button>

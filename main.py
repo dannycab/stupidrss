@@ -108,5 +108,64 @@ async def feed_articles(
     )
 
 
+# API Endpoints for programmatic access
+@app.get("/api/feeds")
+async def api_get_feeds(db: AsyncSession = Depends(get_db)):
+    """Get all feeds as JSON."""
+    rss_service = RSSService(db)
+    feeds = await rss_service.get_all_feeds()
+    return [{"id": f.id, "title": f.title, "url": f.url, "description": f.description, 
+             "last_updated": f.last_updated, "created_at": f.created_at} for f in feeds]
+
+
+@app.get("/api/feeds/{feed_id}")
+async def api_get_feed(feed_id: int, db: AsyncSession = Depends(get_db)):
+    """Get a specific feed as JSON."""
+    rss_service = RSSService(db)
+    feed = await rss_service.get_feed_by_id(feed_id)
+    if not feed:
+        raise HTTPException(status_code=404, detail="Feed not found")
+    return {"id": feed.id, "title": feed.title, "url": feed.url, "description": feed.description,
+            "last_updated": feed.last_updated, "created_at": feed.created_at}
+
+
+@app.get("/api/articles")
+async def api_get_articles(limit: int = 20, db: AsyncSession = Depends(get_db)):
+    """Get recent articles as JSON."""
+    rss_service = RSSService(db)
+    articles = await rss_service.get_recent_articles(limit=limit)
+    return [{"id": a.id, "title": a.title, "link": a.link, "description": a.description,
+             "author": a.author, "published_date": a.published_date, "feed_id": a.feed_id,
+             "feed_title": a.feed.title} for a in articles]
+
+
+@app.get("/api/feeds/{feed_id}/articles")
+async def api_get_feed_articles(feed_id: int, db: AsyncSession = Depends(get_db)):
+    """Get articles from a specific feed as JSON."""
+    rss_service = RSSService(db)
+    feed = await rss_service.get_feed_by_id(feed_id)
+    if not feed:
+        raise HTTPException(status_code=404, detail="Feed not found")
+    
+    articles = await rss_service.get_articles_by_feed(feed_id)
+    return [{"id": a.id, "title": a.title, "link": a.link, "description": a.description,
+             "author": a.author, "published_date": a.published_date} for a in articles]
+
+
+@app.put("/api/feeds/{feed_id}")
+async def api_update_feed(feed_id: int, title: str = None, db: AsyncSession = Depends(get_db)):
+    """Update a feed's metadata."""
+    rss_service = RSSService(db)
+    feed = await rss_service.get_feed_by_id(feed_id)
+    if not feed:
+        raise HTTPException(status_code=404, detail="Feed not found")
+    
+    if title:
+        feed.title = title
+        await db.commit()
+    
+    return {"message": "Feed updated", "id": feed.id, "title": feed.title}
+
+
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
