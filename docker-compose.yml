@@ -3,12 +3,12 @@ services:
     build: .
     container_name: stupidrss
     ports:
-      - "8000:8000"
+      - "${PORT:-8000}:8000"
     volumes:
-      - ./data:/app/data
+      - "${DATA_VOLUME_PATH:-./data}:${CONTAINER_DATA_PATH:-/app/data}"
     environment:
-      - PYTHONPATH=/app
-      - DATABASE_URL=sqlite:///data/rss_reader.db
+      - PYTHONPATH=${PYTHONPATH:-/app}
+      - DATABASE_URL=${DATABASE_URL:-sqlite:///data/rss_reader.db}
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/"]
