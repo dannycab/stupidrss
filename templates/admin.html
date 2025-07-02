@@ -76,6 +76,51 @@
         </div>
     </div>
 
+    <!-- Add Feed Section -->
+    <div class="mb-8">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 transition-colors">
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Add New Feed</h2>
+            </div>
+            <div class="p-6">
+                <form id="add-feed-form" action="/feeds/add" method="POST" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="url" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">RSS Feed URL</label>
+                            <input 
+                                type="url" 
+                                id="url" 
+                                name="url" 
+                                required
+                                placeholder="https://example.com/rss.xml"
+                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                            >
+                        </div>
+                        <div>
+                            <label for="category" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Category</label>
+                            <input 
+                                type="text" 
+                                id="category" 
+                                name="category" 
+                                placeholder="e.g., Tech, News, Sports, Science"
+                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                                value="General"
+                            >
+                        </div>
+                    </div>
+                    <div class="flex justify-end">
+                        <button 
+                            type="submit"
+                            class="bg-primary dark:bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors"
+                        >
+                            Add Feed
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <!-- Feed Management -->
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 transition-colors">
@@ -302,9 +347,13 @@ async function deleteFeed(feedId, feedTitle) {
             });
             if (response.ok) {
                 location.reload();
+            } else {
+                const errorData = await response.json();
+                alert(`Error deleting feed: ${errorData.detail || 'Unknown error'}`);
             }
         } catch (error) {
             console.error('Error deleting feed:', error);
+            alert(`Error deleting feed: ${error.message}`);
         }
     }
 }

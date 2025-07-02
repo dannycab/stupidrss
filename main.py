@@ -79,6 +79,10 @@ async def add_feed(
     rss_service = RSSService(db)
     try:
         feed = await rss_service.add_feed(url, category.strip() or "General")
+        # Check if request came from admin panel
+        referer = request.headers.get("referer", "")
+        if "/admin" in referer:
+            return RedirectResponse(url="/app/admin", status_code=303)
         return RedirectResponse(url="/app", status_code=303)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to add feed: {str(e)}")
