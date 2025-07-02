@@ -82,32 +82,8 @@
 
         // Initialize dark mode on page load
         initDarkMode();
-
-        function toggleAddForm() {
-            const form = document.getElementById('add-feed-form');
-            form.classList.toggle('hidden');
-            if (!form.classList.contains('hidden')) {
-                document.getElementById('feed-url').focus();
-            }
-        }
-
-        function refreshFeed(feedId) {
-            fetch(`/feeds/${feedId}/refresh`, {
-                method: 'POST',
-            }).then(() => {
-                location.reload();
-            });
-        }
-
-        function deleteFeed(feedId) {
-            if (confirm('Are you sure you want to delete this feed?')) {
-                fetch(`/feeds/${feedId}`, {
-                    method: 'DELETE',
-                }).then(() => {
-                    location.reload();
-                });
-            }
-        }
     </script>
+    
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

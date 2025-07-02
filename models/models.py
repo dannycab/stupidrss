@@ -11,6 +11,7 @@ class Feed(Base):
     title = Column(String(255), nullable=False)
     url = Column(String(500), unique=True, nullable=False, index=True)
     description = Column(Text)
+    category = Column(String(100), default="General")  # New: Tech, Sports, News, etc.
     last_updated = Column(DateTime, default=datetime.utcnow)
     created_at = Column(DateTime, default=datetime.utcnow)
     is_active = Column(Boolean, default=True)
@@ -27,10 +28,13 @@ class Article(Base):
     link = Column(String(1000), nullable=False)
     description = Column(Text)
     content = Column(Text)
+    full_content = Column(Text)  # New: scraped full article content
     author = Column(String(255))
     published_date = Column(DateTime)
     created_at = Column(DateTime, default=datetime.utcnow)
     is_read = Column(Boolean, default=False)
+    is_saved = Column(Boolean, default=False)  # New: saved for later
+    read_at = Column(DateTime, nullable=True)  # New: when it was marked read
     
     # Foreign key to feed
     feed_id = Column(Integer, ForeignKey("feeds.id"), nullable=False, index=True)

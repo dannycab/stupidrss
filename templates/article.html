@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Article Header -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6 transition-colors">
+        <div class="flex items-start justify-between mb-4">
+            <div class="flex-1">
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">{{ article.title }}</h1>
+                <div class="flex flex-wrap items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+                    <span class="font-medium text-primary dark:text-blue-400">{{ article.feed.title }}</span>
+                    {% if article.author %}
+                    <span>by {{ article.author }}</span>
+                    {% endif %}
+                    <span>{{ article.published_date.strftime('%B %d, %Y at %H:%M') if article.published_date else 'Unknown date' }}</span>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2 ml-4">
+                <!-- Mark Read/Unread -->
+                <button 
+                    onclick="toggleRead({{ article.id }}, {{ article.is_read|lower }})"
+                    class="inline-flex items-center px-3 py-2 text-sm rounded-lg transition-colors {% if article.is_read %}bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/30{% else %}bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600{% endif %}"
+                    id="read-btn-{{ article.id }}"
+                >
+                    {% if article.is_read %}
+                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                        </svg>
+                        Read
+                    {% else %}
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Mark Read
+                    {% endif %}
+                </button>
+                
+                <!-- Save/Unsave -->
+                <button 
+                    onclick="toggleSave({{ article.id }}, {{ article.is_saved|lower }})"
+                    class="inline-flex items-center px-3 py-2 text-sm rounded-lg transition-colors {% if article.is_saved %}bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 hover:bg-yellow-200 dark:hover:bg-yellow-900/30{% else %}bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600{% endif %}"
+                    id="save-btn-{{ article.id }}"
+                >
+                    {% if article.is_saved %}
+                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"></path>
+                        </svg>
+                        Saved
+                    {% else %}
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
+                        </svg>
+                        Save
+                    {% endif %}
+                </button>
+                
+                <!-- External Link -->
+                <a href="{{ article.link }}" 
+                   target="_blank" 
+                   rel="noopener noreferrer"
+                   class="inline-flex items-center px-3 py-2 text-sm bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                    </svg>
+                    Original
+                </a>
+            </div>
+        </div>
+        
+        <!-- Description -->
+        {% if article.description %}
+        <div class="text-gray-600 dark:text-gray-300 border-l-4 border-gray-200 dark:border-gray-600 pl-4 mb-6">
+            <p class="italic">{{ article.description }}</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Article Content -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 transition-colors">
+        <div class="p-6">
+            {% if article.full_content %}
+                <!-- Full scraped content -->
+                <div class="prose prose-lg dark:prose-invert max-w-none">
+                    {{ article.full_content|safe }}
+                </div>
+            {% elif article.content %}
+                <!-- RSS content -->
+                <div class="prose prose-lg dark:prose-invert max-w-none">
+                    {{ article.content|safe }}
+                </div>
+            {% else %}
+                <!-- Fallback to description -->
+                <div class="text-gray-600 dark:text-gray-300 mb-6">
+                    {% if article.description %}
+                        <p>{{ article.description }}</p>
+                    {% else %}
+                        <p class="italic">No content available for this article.</p>
+                    {% endif %}
+                </div>
+                <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                    <p class="text-blue-800 dark:text-blue-200 text-sm">
+                        <strong>Note:</strong> Full content not available. 
+                        <button onclick="scrapeContent({{ article.id }})" class="underline hover:no-underline">
+                            Click here to fetch full content
+                        </button>
+                        or visit the 
+                        <a href="{{ article.link }}" target="_blank" rel="noopener noreferrer" class="underline hover:no-underline">
+                            original article
+                        </a>.
+                    </p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="mt-6 flex justify-between">
+        <a href="/app" 
+           class="inline-flex items-center px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+            Back to Articles
+        </a>
+        
+        <a href="/feeds/{{ article.feed.id }}/articles" 
+           class="inline-flex items-center px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+            More from {{ article.feed.title }}
+            <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+        </a>
+    </div>
+</div>
+
+<script>
+// Mark article as read/unread
+async function toggleRead(articleId, currentlyRead) {
+    try {
+        const response = await fetch(`/api/articles/${articleId}/read`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ is_read: !currentlyRead })
+        });
+        
+        if (response.ok) {
+            const btn = document.getElementById(`read-btn-${articleId}`);
+            if (!currentlyRead) {
+                btn.className = 'inline-flex items-center px-3 py-2 text-sm rounded-lg transition-colors bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/30';
+                btn.innerHTML = '<svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>Read';
+                btn.setAttribute('onclick', `toggleRead(${articleId}, true)`);
+            } else {
+                btn.className = 'inline-flex items-center px-3 py-2 text-sm rounded-lg transition-colors bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600';
+                btn.innerHTML = '<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>Mark Read';
+                btn.setAttribute('onclick', `toggleRead(${articleId}, false)`);
+            }
+        }
+    } catch (error) {
+        console.error('Error toggling read status:', error);
+    }
+}
+
+// Save/unsave article
+async function toggleSave(articleId, currentlySaved) {
+    try {
+        const response = await fetch(`/api/articles/${articleId}/save`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ is_saved: !currentlySaved })
+        });
+        
+        if (response.ok) {
+            const btn = document.getElementById(`save-btn-${articleId}`);
+            if (!currentlySaved) {
+                btn.className = 'inline-flex items-center px-3 py-2 text-sm rounded-lg transition-colors bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 hover:bg-yellow-200 dark:hover:bg-yellow-900/30';
+                btn.innerHTML = '<svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"></path></svg>Saved';
+                btn.setAttribute('onclick', `toggleSave(${articleId}, true)`);
+            } else {
+                btn.className = 'inline-flex items-center px-3 py-2 text-sm rounded-lg transition-colors bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600';
+                btn.innerHTML = '<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path></svg>Save';
+                btn.setAttribute('onclick', `toggleSave(${articleId}, false)`);
+            }
+        }
+    } catch (error) {
+        console.error('Error toggling save status:', error);
+    }
+}
+
+// Scrape full content
+async function scrapeContent(articleId) {
+    try {
+        const response = await fetch(`/api/articles/${articleId}/scrape`, {
+            method: 'POST'
+        });
+        
+        if (response.ok) {
+            location.reload(); // Reload to show the scraped content
+        }
+    } catch (error) {
+        console.error('Error scraping content:', error);
+    }
+}
+</script>
+{% endblock %}

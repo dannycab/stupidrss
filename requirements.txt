@@ -7,7 +7,9 @@ sqlalchemy>=2.0.25
 aiosqlite==0.19.0
 jinja2==3.1.2
 python-dateutil==2.8.2
-greenlet0.104.1
+greenlet
+beautifulsoup4==4.12.2
+readability-lxml==0.8.10.104.1
 uvicorn[standard]==0.24.0
 python-multipart==0.0.6
 feedparser==6.0.10

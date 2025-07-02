@@ -20,6 +20,10 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 import uvicorn
 from contextlib import asynccontextmanager
+from pydantic import BaseModel
+from datetime import datetime
+from sqlalchemy import func, select, update
+from datetime import datetime
 
 from models.database import init_db, get_db
 from services.rss_service import RSSService
@@ -68,12 +72,13 @@ async def read_app(request: Request, db: AsyncSession = Depends(get_db)):
 async def add_feed(
     request: Request,
     url: str = Form(...),
+    category: str = Form("General"),
     db: AsyncSession = Depends(get_db)
 ):
     """Add a new RSS feed."""
     rss_service = RSSService(db)
     try:
-        feed = await rss_service.add_feed(url)
+        feed = await rss_service.add_feed(url, category.strip() or "General")
         return RedirectResponse(url="/app", status_code=303)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to add feed: {str(e)}")
@@ -115,6 +120,86 @@ async def feed_articles(
         "feed_articles.html",
         {"request": request, "feed": feed, "articles": articles}
     )
+
+
+@app.get("/articles/{article_id}", response_class=HTMLResponse)
+async def read_article(
+    request: Request, 
+    article_id: int, 
+    db: AsyncSession = Depends(get_db)
+):
+    """Show full article for reading within the app."""
+    rss_service = RSSService(db)
+    article = await rss_service.get_article_by_id(article_id)
+    if not article:
+        raise HTTPException(status_code=404, detail="Article not found")
+    
+    # Mark as read when viewing
+    if not article.is_read:
+        await rss_service.mark_article_read(article_id, True)
+        await db.refresh(article)
+    
+    return templates.TemplateResponse(
+        "article.html",
+        {"request": request, "article": article}
+    )
+
+
+@app.get("/saved", response_class=HTMLResponse)
+async def saved_articles(request: Request, db: AsyncSession = Depends(get_db)):
+    """Show saved articles."""
+    rss_service = RSSService(db)
+    articles = await rss_service.get_saved_articles()
+    
+    return templates.TemplateResponse(
+        "saved.html",
+        {"request": request, "articles": articles}
+    )
+
+
+@app.get("/admin", response_class=HTMLResponse)
+async def admin_panel(request: Request, db: AsyncSession = Depends(get_db)):
+    """Admin panel for managing feeds and articles."""
+    rss_service = RSSService(db)
+    
+    # Get stats
+    feeds = await rss_service.get_all_feeds()
+    feeds_by_category = await rss_service.get_feeds_by_category()
+    
+    # Count articles
+    total_articles_result = await db.execute(select(func.count(Article.id)))
+    total_articles = total_articles_result.scalar()
+    
+    saved_articles_result = await db.execute(
+        select(func.count(Article.id)).where(Article.is_saved == True)
+    )
+    saved_articles = saved_articles_result.scalar()
+    
+    categories = list(feeds_by_category.keys())
+    
+    stats = {
+        'total_feeds': len(feeds),
+        'total_articles': total_articles,
+        'saved_articles': saved_articles,
+        'categories': categories
+    }
+    
+    return templates.TemplateResponse(
+        "admin.html",
+        {
+            "request": request, 
+            "stats": stats, 
+            "feeds_by_category": feeds_by_category
+        }
+    )
+
+
+# Request models for API
+class ReadStatusRequest(BaseModel):
+    is_read: bool
+
+class SaveStatusRequest(BaseModel):
+    is_saved: bool
 
 
 # API Endpoints for programmatic access
@@ -174,6 +259,98 @@ async def api_update_feed(feed_id: int, title: str = None, db: AsyncSession = De
         await db.commit()
     
     return {"message": "Feed updated", "id": feed.id, "title": feed.title}
+
+
+@app.post("/api/articles/{article_id}/read")
+async def api_mark_article_read(
+    article_id: int, 
+    request: ReadStatusRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    """Mark an article as read or unread."""
+    rss_service = RSSService(db)
+    article = await rss_service.get_article_by_id(article_id)
+    if not article:
+        raise HTTPException(status_code=404, detail="Article not found")
+    
+    await rss_service.mark_article_read(article_id, request.is_read)
+    return {"message": "Read status updated", "is_read": request.is_read}
+
+
+@app.post("/api/articles/{article_id}/save")
+async def api_save_article(
+    article_id: int, 
+    request: SaveStatusRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    """Save or unsave an article."""
+    rss_service = RSSService(db)
+    article = await rss_service.get_article_by_id(article_id)
+    if not article:
+        raise HTTPException(status_code=404, detail="Article not found")
+    
+    await rss_service.save_article(article_id, request.is_saved)
+    return {"message": "Save status updated", "is_saved": request.is_saved}
+
+
+@app.post("/api/articles/{article_id}/scrape")
+async def api_scrape_article(article_id: int, db: AsyncSession = Depends(get_db)):
+    """Scrape full content for an article."""
+    rss_service = RSSService(db)
+    article = await rss_service.get_article_by_id(article_id)
+    if not article:
+        raise HTTPException(status_code=404, detail="Article not found")
+    
+    await rss_service.scrape_article_content(article_id)
+    return {"message": "Content scraped successfully"}
+
+
+# Admin API endpoints
+@app.put("/api/feeds/{feed_id}")
+async def api_update_feed_admin(
+    feed_id: int, 
+    title: str = None, 
+    category: str = None,
+    db: AsyncSession = Depends(get_db)
+):
+    """Update a feed's metadata including category."""
+    rss_service = RSSService(db)
+    feed = await rss_service.get_feed_by_id(feed_id)
+    if not feed:
+        raise HTTPException(status_code=404, detail="Feed not found")
+    
+    if title:
+        feed.title = title
+    if category:
+        await rss_service.update_feed_category(feed_id, category)
+        feed.category = category
+    
+    await db.commit()
+    return {"message": "Feed updated", "id": feed.id, "title": feed.title, "category": feed.category}
+
+@app.post("/api/feeds/refresh-all")
+async def api_refresh_all_feeds(db: AsyncSession = Depends(get_db)):
+    """Refresh all active feeds."""
+    rss_service = RSSService(db)
+    feeds = await rss_service.get_all_feeds()
+    
+    for feed in feeds:
+        try:
+            await rss_service.refresh_feed(feed.id)
+        except Exception as e:
+            print(f"Failed to refresh feed {feed.id}: {e}")
+    
+    return {"message": f"Refreshed {len(feeds)} feeds"}
+
+@app.post("/api/articles/mark-all-read")
+async def api_mark_all_read(db: AsyncSession = Depends(get_db)):
+    """Mark all articles as read."""
+    await db.execute(
+        update(Article).values(is_read=True, read_at=datetime.utcnow())
+    )
+    await db.commit()
+    
+    return {"message": "All articles marked as read"}
 
 
 if __name__ == "__main__":
