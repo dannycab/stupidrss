@@ -413,8 +413,10 @@ async def category_articles(request: Request, category_name: str, page: int = 1,
     feeds_by_category = await rss_service.get_feeds_by_category()
     feeds = feeds_by_category.get(category_name, [])
     
-    # Get articles for this category with pagination
-    articles = await rss_service.get_articles_by_category(category_name, page=page, per_page=20)
+    # Get articles for this category with pagination (convert page to offset)
+    per_page = 20
+    offset = (page - 1) * per_page
+    articles = await rss_service.get_articles_by_category(category_name, limit=per_page, offset=offset)
     
     return templates.TemplateResponse(
         "category_articles.html",
