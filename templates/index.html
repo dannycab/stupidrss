@@ -105,7 +105,7 @@
                                     </svg>
                                 </button>
                                 <button 
-                                    onclick="deleteFeed({{ feed.id }})"
+                                    onclick="deleteFeed({{ feed.id }}, '{{ feed.title|replace("'", "\\'") }}')"
                                     class="p-1 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 transition-colors"
                                     title="Delete"
                                 >
@@ -270,20 +270,6 @@
 
 {% block extra_js %}
 <script>
-// Toggle add feed form
-function toggleAddForm() {
-    const form = document.getElementById('add-feed-form');
-    const isHidden = form.classList.contains('hidden');
-    
-    if (isHidden) {
-        form.classList.remove('hidden');
-        document.getElementById('feed-url').focus();
-    } else {
-        form.classList.add('hidden');
-        document.getElementById('feed-url').value = '';
-    }
-}
-
 // Refresh feed
 async function refreshFeed(feedId) {
     try {
@@ -295,22 +281,6 @@ async function refreshFeed(feedId) {
         }
     } catch (error) {
         console.error('Error refreshing feed:', error);
-    }
-}
-
-// Delete feed
-async function deleteFeed(feedId) {
-    if (confirm('Are you sure you want to delete this feed? This will also delete all its articles.')) {
-        try {
-            const response = await fetch(`/feeds/${feedId}`, {
-                method: 'DELETE'
-            });
-            if (response.ok) {
-                location.reload();
-            }
-        } catch (error) {
-            console.error('Error deleting feed:', error);
-        }
     }
 }
 

@@ -45,10 +45,12 @@
                     <a href="/" class="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-blue-400 transition-colors">Home</a>
                     <a href="/saved" class="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-blue-400 transition-colors">Saved</a>
                     <a href="/admin" class="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-blue-400 transition-colors">Admin</a>
+                    {% if request.url.path in ['/', '/admin'] %}
                     <button onclick="toggleAddForm()" 
                             class="bg-primary dark:bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors">
                         Add Feed
                     </button>
+                    {% endif %}
                 </nav>
             </div>
         </div>
@@ -79,6 +81,73 @@
             } else {
                 document.documentElement.classList.add('dark');
                 localStorage.setItem('darkMode', 'true');
+            }
+        }
+
+        // Add Feed functionality - works on pages that have the form
+        function toggleAddForm() {
+            // Check if we're on admin page
+            const adminSection = document.getElementById('add-feed-section');
+            if (adminSection) {
+                // Admin page logic - toggle the section visibility
+                const isHidden = adminSection.classList.contains('hidden');
+                if (isHidden) {
+                    adminSection.classList.remove('hidden');
+                    // Focus on the URL input
+                    const urlInput = document.getElementById('url');
+                    if (urlInput) urlInput.focus();
+                } else {
+                    adminSection.classList.add('hidden');
+                    // Clear the form
+                    const urlInput = document.getElementById('url');
+                    if (urlInput) urlInput.value = '';
+                    const categoryInput = document.getElementById('category');
+                    if (categoryInput) categoryInput.value = 'General';
+                }
+                return;
+            }
+            
+            // Index page logic - toggle the overlay form
+            const form = document.getElementById('add-feed-form');
+            if (!form) {
+                // If no form on this page, redirect to home page
+                window.location.href = '/';
+                return;
+            }
+            
+            const isHidden = form.classList.contains('hidden');
+            
+            if (isHidden) {
+                form.classList.remove('hidden');
+                // Try to focus on the URL input (different IDs on different pages)
+                const urlInput = document.getElementById('feed-url') || document.getElementById('url');
+                if (urlInput) urlInput.focus();
+            } else {
+                form.classList.add('hidden');
+                // Clear the form
+                const urlInput = document.getElementById('feed-url') || document.getElementById('url');
+                if (urlInput) urlInput.value = '';
+            }
+        }
+
+        // Standardized delete feed function
+        async function deleteFeed(feedId, feedTitle = null) {
+            const title = feedTitle || 'this feed';
+            if (confirm(`Are you sure you want to delete "${title}"? This will also delete all its articles.`)) {
+                try {
+                    const response = await fetch(`/feeds/${feedId}`, {
+                        method: 'DELETE'
+                    });
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        const errorData = await response.json().catch(() => ({}));
+                        alert(`Error deleting feed: ${errorData.detail || 'Unknown error'}`);
+                    }
+                } catch (error) {
+                    console.error('Error deleting feed:', error);
+                    alert(`Error deleting feed: ${error.message}`);
+                }
             }
         }
 
