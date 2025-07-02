@@ -1,6 +1,7 @@
 # Compatibility shim for Python 3.13
 # The cgi module was removed, but feedparser still tries to import it
 import sys
+import re
 if sys.version_info >= (3, 13):
     import html
     import html.parser
@@ -71,35 +72,161 @@ def extract_youtube_id(url):
             return match.group(1)
     return ""
 
-def clean_youtube_description(text):
-    """Clean up YouTube RSS description text"""
+def clean_content(text):
+    """Comprehensive content cleaning: HTML to plain text with formatting preserved"""
     if not text:
         return ""
     
-    # Remove common YouTube spam
+    import html
+    import re
+    from html.parser import HTMLParser
+    
+    class HTMLToTextParser(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.text = []
+            self.in_list = False
+            self.list_item_prefix = "• "
+            
+        def handle_starttag(self, tag, attrs):
+            if tag in ['p', 'div', 'br']:
+                self.text.append('\n')
+            elif tag in ['ul', 'ol']:
+                self.in_list = True
+                self.text.append('\n')
+                if tag == 'ol':
+                    self.list_item_prefix = "1. "  # Will be updated for each item
+            elif tag == 'li':
+                if self.in_list:
+                    self.text.append(f'\n{self.list_item_prefix}')
+            elif tag in ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']:
+                self.text.append('\n\n')
+                
+        def handle_endtag(self, tag):
+            if tag in ['p', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6']:
+                self.text.append('\n')
+            elif tag in ['ul', 'ol']:
+                self.in_list = False
+                self.list_item_prefix = "• "
+                self.text.append('\n')
+                
+        def handle_data(self, data):
+            # Clean up the data and preserve word boundaries
+            data = data.strip()
+            if data:
+                # Add space before data if the last character isn't already whitespace
+                if self.text and not self.text[-1].endswith(' ') and not self.text[-1].endswith('\n'):
+                    self.text.append(' ')
+                self.text.append(data)
+    
+    # Decode HTML entities first
+    text = html.unescape(text)
+    
+    # Parse HTML and convert to text
+    parser = HTMLToTextParser()
+    try:
+        parser.feed(text)
+        cleaned_text = ''.join(parser.text)
+    except:
+        # Fallback: simple regex cleaning if HTML parsing fails
+        import re
+        cleaned_text = re.sub(r'<[^>]+>', '', text)
+        cleaned_text = html.unescape(cleaned_text)
+    
+    # Post-processing cleanup
+    lines = cleaned_text.split('\n')
+    cleaned_lines = []
+    
+    for line in lines:
+        line = line.strip()
+        
+        # Skip empty lines at the start
+        if not line and not cleaned_lines:
+            continue
+            
+        # Skip lines with URLs (except for meaningful context)
+        if line.startswith('http') or line.startswith('www.'):
+            continue
+            
+        # Skip common spam patterns
+        spam_patterns = [
+            r'subscribe\s+to\s+our',
+            r'follow\s+us\s+on',
+            r'like\s+and\s+subscribe',
+            r'visit\s+our\s+website',
+            r'^\s*donate\s*$',
+            r'^\s*volunteer\s*$',
+            r'501\(c\)',
+            r'help!\s*$',
+            r'^\s*--+\s*$',
+            r'^\s*==+\s*$',
+            r'^\d{1,2}:\d{2}',  # Timestamps
+        ]
+        
+        is_spam = False
+        for pattern in spam_patterns:
+            if re.search(pattern, line, re.IGNORECASE):
+                is_spam = True
+                break
+                
+        if not is_spam and len(line) > 0:
+            cleaned_lines.append(line)
+    
+    # Join lines and clean up excessive whitespace
+    result = '\n'.join(cleaned_lines)
+    
+    # Clean up excessive newlines
+    result = re.sub(r'\n\s*\n\s*\n+', '\n\n', result)
+    result = result.strip()
+    
+    # For YouTube content, apply additional cleaning
+    if 'youtube.com' in text.lower() or 'youtu.be' in text.lower():
+        result = clean_youtube_specific(result)
+    
+    return result
+
+def clean_youtube_specific(text):
+    """Additional cleaning specifically for YouTube content"""
+    if not text:
+        return ""
+    
     lines = text.split('\n')
     cleaned_lines = []
     
     for line in lines:
         line = line.strip()
-        # Skip lines with URLs
-        if 'http' in line or 'www.' in line:
-            continue
-        # Skip lines with donate/volunteer requests
-        if any(word in line.lower() for word in ['donate', 'volunteer', 'nonprofit', '501(c)', 'help!']):
-            continue
-        # Skip chapter markers (timestamps)
-        if re.match(r'^\d{1,2}:\d{2}', line):
-            continue
-        # Skip separator lines
-        if line in ['------------------', '---', '===']:
-            continue
-        # Keep the line if it's substantial
-        if len(line) > 10:
+        
+        # Skip YouTube-specific spam
+        youtube_spam = [
+            'watch on youtube',
+            'youtube.com',
+            'subscribe to',
+            'like this video',
+            'comment below',
+            'hit the bell',
+            'notification squad',
+            'smash that like',
+            'don\'t forget to subscribe',
+            'ring the bell',
+            'turn on notifications',
+        ]
+        
+        is_youtube_spam = False
+        for spam in youtube_spam:
+            if spam in line.lower():
+                is_youtube_spam = True
+                break
+                
+        if not is_youtube_spam and line:
             cleaned_lines.append(line)
     
-    # Take only first 3 lines to keep it concise
-    return '\n'.join(cleaned_lines[:3])
+    # Take only the most relevant lines (first 5 lines max for YouTube)
+    result = '\n'.join(cleaned_lines[:5])
+    return result
+
+def clean_youtube_description(text):
+    """Legacy function - now just calls clean_content for backward compatibility"""
+    return clean_content(text)
 
 def youtube_thumbnail_url(url):
     """Generate YouTube thumbnail URL from video URL"""
@@ -119,6 +246,7 @@ templates = Jinja2Templates(directory="templates")
 # Add custom filters
 templates.env.filters['youtube_id'] = extract_youtube_id
 templates.env.filters['clean_youtube'] = clean_youtube_description
+templates.env.filters['clean_content'] = clean_content
 templates.env.filters['youtube_thumbnail'] = youtube_thumbnail_url
 
 

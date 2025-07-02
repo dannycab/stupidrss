@@ -68,12 +68,8 @@
                         </h2>
                         
                         {% if article.description %}
-                        <p class="text-gray-600 dark:text-gray-300 mb-4 leading-relaxed">
-                            {% if youtube_id %}
-                                {{ article.description | clean_youtube }}
-                            {% else %}
-                                {{ article.description }}
-                            {% endif %}
+                        <p class="text-gray-600 dark:text-gray-300 mb-4 leading-relaxed whitespace-pre-line">
+                            {{ article.description | clean_content }}
                         </p>
                         {% endif %}
                         

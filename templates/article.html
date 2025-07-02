@@ -70,7 +70,7 @@
         <!-- Description -->
         {% if article.description %}
         <div class="text-gray-600 dark:text-gray-300 border-l-4 border-gray-200 dark:border-gray-600 pl-4 mb-6">
-            <div class="italic">{{ article.description | clean_youtube | safe }}</div>
+            <div class="whitespace-pre-line">{{ article.description | clean_content }}</div>
         </div>
         {% endif %}
     </div>
@@ -104,19 +104,19 @@
 
             {% if article.full_content %}
                 <!-- Full scraped content -->
-                <div class="prose prose-lg dark:prose-invert max-w-none article-content">
-                    {{ article.full_content|safe }}
+                <div class="prose prose-lg dark:prose-invert max-w-none article-content whitespace-pre-line">
+                    {{ article.full_content | clean_content }}
                 </div>
             {% elif article.content %}
                 <!-- RSS content -->
-                <div class="prose prose-lg dark:prose-invert max-w-none article-content">
-                    {{ article.content|safe }}
+                <div class="prose prose-lg dark:prose-invert max-w-none article-content whitespace-pre-line">
+                    {{ article.content | clean_content }}
                 </div>
             {% else %}
                 <!-- Fallback to description -->
-                <div class="text-gray-100 dark:text-gray-100 mb-6 article-content">
+                <div class="text-gray-100 dark:text-gray-100 mb-6 article-content whitespace-pre-line">
                     {% if article.description %}
-                        <div>{{ article.description|safe }}</div>
+                        <div>{{ article.description | clean_content }}</div>
                     {% else %}
                         <p class="italic">No content available for this article.</p>
                     {% endif %}

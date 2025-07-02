@@ -150,7 +150,7 @@
                                 
                                 {% if article.description %}
                                 <p class="text-gray-600 dark:text-gray-300 text-sm mb-3 line-clamp-3">
-                                    {{ article.description | truncate(200) }}
+                                    {{ article.description | clean_content | truncate(200) }}
                                 </p>
                                 {% endif %}
                                 
