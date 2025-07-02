@@ -388,6 +388,94 @@ async def api_mark_all_read(db: AsyncSession = Depends(get_db)):
     return {"message": "All articles marked as read"}
 
 
+@app.post("/api/articles/embed-youtube")
+async def api_embed_youtube(db: AsyncSession = Depends(get_db)):
+    """Apply YouTube embedding to all articles."""
+    rss_service = RSSService(db)
+    
+    # Get all articles
+    result = await db.execute(select(Article))
+    articles = result.scalars().all()
+    
+    total_articles = len(articles)
+    updated_articles = 0
+    
+    for article in articles:
+        # Check if any of the content fields have YouTube links
+        content_updated = False
+        
+        # Check if the main article link is a YouTube URL and embed it in description
+        if article.link and ('youtube.com' in article.link or 'youtu.be' in article.link):
+            print(f"DEBUG: Found YouTube link for article {article.id}: {article.link}")
+            video_id = rss_service.extract_youtube_video_id(article.link)
+            print(f"DEBUG: Extracted video ID: {video_id}")
+            if video_id:
+                # Check if description already contains an iframe
+                has_iframe = article.description and 'iframe' in article.description
+                print(f"DEBUG: Article {article.id} has iframe already: {has_iframe}")
+                
+                if not has_iframe:
+                    # Create YouTube embed HTML
+                    embed_html = f'''
+<div class="youtube-embed-container my-6">
+    <div class="relative w-full h-0 pb-[56.25%]"> <!-- 16:9 aspect ratio -->
+        <iframe 
+            class="absolute top-0 left-0 w-full h-full rounded-lg shadow-lg"
+            src="https://www.youtube.com/embed/{video_id}?rel=0&modestbranding=1"
+            title="YouTube video player"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen>
+        </iframe>
+    </div>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mt-2 text-center">
+        <a href="{article.link}" target="_blank" rel="noopener noreferrer" class="hover:text-blue-500">
+            Watch on YouTube
+        </a>
+    </p>
+</div>
+'''
+                    
+                    # Add embed to description
+                    if article.description:
+                        article.description = article.description + embed_html
+                        print(f"DEBUG: Added embed to existing description for article {article.id}")
+                    else:
+                        article.description = embed_html
+                        print(f"DEBUG: Created new description with embed for article {article.id}")
+                    content_updated = True
+        
+        if article.content and ('youtube.com' in article.content or 'youtu.be' in article.content):
+            new_content = rss_service.embed_youtube_videos(article.content)
+            if new_content != article.content:
+                article.content = new_content
+                content_updated = True
+        
+        if article.description and ('youtube.com' in article.description or 'youtu.be' in article.description):
+            new_description = rss_service.embed_youtube_videos(article.description)
+            if new_description != article.description:
+                article.description = new_description
+                content_updated = True
+        
+        if article.full_content and ('youtube.com' in article.full_content or 'youtu.be' in article.full_content):
+            new_full_content = rss_service.embed_youtube_videos(article.full_content)
+            if new_full_content != article.full_content:
+                article.full_content = new_full_content
+                content_updated = True
+        
+        if content_updated:
+            updated_articles += 1
+    
+    await db.commit()
+    
+    return {
+        "success": True,
+        "total_articles": total_articles,
+        "updated_articles": updated_articles,
+        "message": f"YouTube embedding applied to {updated_articles} out of {total_articles} articles"
+    }
+
+
 @app.get("/api/opml/export")
 async def api_export_opml(db: AsyncSession = Depends(get_db)):
     """Export all feeds as OPML."""

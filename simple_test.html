@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple OPML Test</title>
+</head>
+<body>
+    <h1>Test Import Button</h1>
+    
+    <button onclick="console.log('Button clicked!'); document.getElementById('file-input').click()">
+        Click Me to Test File Dialog
+    </button>
+    
+    <input type="file" id="file-input" style="display: none;" onchange="console.log('File selected:', this.files[0])">
+    
+    <div id="result"></div>
+    
+    <script>
+        console.log('Script loaded successfully');
+    </script>
+</body>
+</html>

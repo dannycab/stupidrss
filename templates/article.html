@@ -70,7 +70,7 @@
         <!-- Description -->
         {% if article.description %}
         <div class="text-gray-600 dark:text-gray-300 border-l-4 border-gray-200 dark:border-gray-600 pl-4 mb-6">
-            <p class="italic">{{ article.description }}</p>
+            <div class="italic">{{ article.description|safe }}</div>
         </div>
         {% endif %}
     </div>
@@ -78,6 +78,55 @@
     <!-- Article Content -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 transition-colors">
         <div class="p-6">
+            <!-- YouTube Video Embed (if article link is YouTube) -->
+            <!-- DEBUG: Article link: {{ article.link }} -->
+            {% if 'youtube.com' in article.link or 'youtu.be' in article.link %}
+                <!-- DEBUG: YouTube link detected -->
+                {% if 'youtube.com/watch?v=' in article.link %}
+                    {% set video_id = article.link.split('v=')[1].split('&')[0] %}
+                    <!-- DEBUG: Video ID extracted: {{ video_id }} -->
+                    <div class="youtube-embed-container mb-6">
+                        <div class="relative w-full h-0 pb-[56.25%]"> <!-- 16:9 aspect ratio -->
+                            <iframe 
+                                class="absolute top-0 left-0 w-full h-full rounded-lg shadow-lg"
+                                src="https://www.youtube.com/embed/{{ video_id }}?rel=0&modestbranding=1"
+                                title="YouTube video player"
+                                frameborder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                allowfullscreen>
+                            </iframe>
+                        </div>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-2 text-center">
+                            <a href="{{ article.link }}" target="_blank" rel="noopener noreferrer" class="hover:text-blue-500">
+                                Watch on YouTube
+                            </a>
+                        </p>
+                    </div>
+                {% elif 'youtu.be/' in article.link %}
+                    {% set video_id = article.link.split('youtu.be/')[1].split('?')[0] %}
+                    <!-- DEBUG: Video ID extracted: {{ video_id }} -->
+                    <div class="youtube-embed-container mb-6">
+                        <div class="relative w-full h-0 pb-[56.25%]"> <!-- 16:9 aspect ratio -->
+                            <iframe 
+                                class="absolute top-0 left-0 w-full h-full rounded-lg shadow-lg"
+                                src="https://www.youtube.com/embed/{{ video_id }}?rel=0&modestbranding=1"
+                                title="YouTube video player"
+                                frameborder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                allowfullscreen>
+                            </iframe>
+                        </div>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-2 text-center">
+                            <a href="{{ article.link }}" target="_blank" rel="noopener noreferrer" class="hover:text-blue-500">
+                                Watch on YouTube
+                            </a>
+                        </p>
+                    </div>
+                {% endif %}
+            {% else %}
+                <!-- DEBUG: No YouTube link detected -->
+            {% endif %}
+
             {% if article.full_content %}
                 <!-- Full scraped content -->
                 <div class="prose prose-lg dark:prose-invert max-w-none article-content">
@@ -92,7 +141,7 @@
                 <!-- Fallback to description -->
                 <div class="text-gray-100 dark:text-gray-100 mb-6 article-content">
                     {% if article.description %}
-                        <p>{{ article.description }}</p>
+                        <div>{{ article.description|safe }}</div>
                     {% else %}
                         <p class="italic">No content available for this article.</p>
                     {% endif %}

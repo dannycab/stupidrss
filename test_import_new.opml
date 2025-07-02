@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+    <head>
+        <title>New Test OPML Import</title>
+    </head>
+    <body>
+        <outline type="rss" text="Test Feed 1" title="Hacker News" xmlUrl="https://hnrss.org/frontpage" category="Tech"/>
+        <outline type="rss" text="Test Feed 2" title="Invalid Test" xmlUrl="invalid-url-format" category="Test"/>
+        <outline type="rss" text="Test Feed 3" title="TechCrunch" xmlUrl="https://techcrunch.com/feed/" category="Tech"/>
+    </body>
+</opml>

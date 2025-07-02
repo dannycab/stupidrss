@@ -484,3 +484,69 @@ class RSSService:
             logger.error(f"Unexpected error validating feed {url}: {validation_result['error']}")
         
         return validation_result
+
+    def extract_youtube_video_id(self, url: str) -> Optional[str]:
+        """Extract YouTube video ID from various YouTube URL formats."""
+        youtube_patterns = [
+            r'(?:https?://)?(?:www\.)?youtube\.com/watch\?v=([a-zA-Z0-9_-]{11})',
+            r'(?:https?://)?(?:www\.)?youtu\.be/([a-zA-Z0-9_-]{11})',
+            r'(?:https?://)?(?:www\.)?youtube\.com/embed/([a-zA-Z0-9_-]{11})',
+            r'(?:https?://)?(?:www\.)?youtube\.com/v/([a-zA-Z0-9_-]{11})',
+            r'(?:https?://)?(?:m\.)?youtube\.com/watch\?v=([a-zA-Z0-9_-]{11})',
+        ]
+        
+        for pattern in youtube_patterns:
+            match = re.search(pattern, url)
+            if match:
+                return match.group(1)
+        return None
+
+    def embed_youtube_videos(self, content: str) -> str:
+        """Find YouTube links in content and add embedded videos."""
+        if not content:
+            return content
+        
+        # Find all URLs in the content
+        url_pattern = r'https?://[^\s<>"\']+(?:youtube\.com|youtu\.be)[^\s<>"\']*'
+        urls = re.findall(url_pattern, content, re.IGNORECASE)
+        
+        modified_content = content
+        embedded_videos = set()  # Track to avoid duplicates
+        
+        for url in urls:
+            video_id = self.extract_youtube_video_id(url)
+            if video_id and video_id not in embedded_videos:
+                # Create YouTube embed HTML
+                embed_html = f'''
+                <div class="youtube-embed-container my-6">
+                    <div class="relative w-full h-0 pb-[56.25%]"> <!-- 16:9 aspect ratio -->
+                        <iframe 
+                            class="absolute top-0 left-0 w-full h-full rounded-lg shadow-lg"
+                            src="https://www.youtube.com/embed/{video_id}?rel=0&modestbranding=1"
+                            title="YouTube video player"
+                            frameborder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                            allowfullscreen>
+                        </iframe>
+                    </div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-2 text-center">
+                        <a href="{url}" target="_blank" rel="noopener noreferrer" class="hover:text-blue-500">
+                            Watch on YouTube
+                        </a>
+                    </p>
+                </div>
+                '''
+                
+                # Add the embed after the link, or replace the link if it's on its own line
+                if f'<a href="{url}"' in modified_content:
+                    # If it's already a link, add embed after it
+                    link_pattern = f'<a[^>]*href="{re.escape(url)}"[^>]*>.*?</a>'
+                    modified_content = re.sub(link_pattern, lambda m: m.group(0) + embed_html, modified_content)
+                else:
+                    # If it's just a plain URL, replace it with a link + embed
+                    link_html = f'<a href="{url}" target="_blank" rel="noopener noreferrer">{url}</a>'
+                    modified_content = modified_content.replace(url, link_html + embed_html)
+                
+                embedded_videos.add(video_id)
+        
+        return modified_content
