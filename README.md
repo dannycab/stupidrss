@@ -2,7 +2,7 @@
 
 A fast, minimalistic RSS reader webapp built with FastAPI and Tailwind CSS.
 
-🌐 **Live Demo**: [Documentation](http://localhost:8000) | [RSS Reader App](http://localhost:8000/app)  
+🌐 **Live Demo**: [Documentation](https://dannycab.github.io/stupidrss)  
 🔗 **GitHub**: https://github.com/dannycab/stupidrss
 
 ## Features
@@ -37,6 +37,20 @@ A fast, minimalistic RSS reader webapp built with FastAPI and Tailwind CSS.
 3. **Open your browser** and go to `http://localhost:8000`
 
 4. **Add RSS feeds** and start reading!
+
+- `GET /app` - Main RSS reader application
+- `GET /docs` - Interactive OpenAPI documentation
+- `GET /redoc` - Alternative API documentation
+
+### 🔗 **REST API Endpoints:**
+- `GET /api/feeds` - List all feeds
+- `GET /api/feeds/{id}` - Get specific feed
+- `GET /api/articles` - Recent articles  
+- `GET /api/feeds/{id}/articles` - Feed-specific articles
+- `PUT /api/feeds/{id}` - Update feed metadata
+- `POST /feeds/add` - Add new feed
+- `DELETE /feeds/{id}` - Delete feed
+- `POST /feeds/{id}/refresh` - Refresh feed
 
 ## Development
 
