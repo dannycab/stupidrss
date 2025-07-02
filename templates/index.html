@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Add Feed Form -->
+<div id="add-feed-form" class="hidden mb-8">
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Add New RSS Feed</h2>
+        <form action="/feeds/add" method="post" class="flex gap-4">
+            <input 
+                type="url" 
+                name="url" 
+                id="feed-url"
+                placeholder="https://example.com/rss.xml"
+                class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                required
+            >
+            <button 
+                type="submit"
+                class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+            >
+                Add Feed
+            </button>
+            <button 
+                type="button"
+                onclick="toggleAddForm()"
+                class="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 transition-colors"
+            >
+                Cancel
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+    <!-- Sidebar with Feeds -->
+    <div class="lg:col-span-1">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Feeds</h2>
+            {% if feeds %}
+                <div class="space-y-3">
+                    {% for feed in feeds %}
+                    <div class="flex items-center justify-between p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
+                        <div class="flex-1">
+                            <a href="/feeds/{{ feed.id }}/articles" 
+                               class="text-sm font-medium text-gray-900 hover:text-primary line-clamp-2">
+                                {{ feed.title }}
+                            </a>
+                            <p class="text-xs text-gray-500 mt-1">
+                                Last updated: {{ feed.last_updated.strftime('%m/%d %H:%M') if feed.last_updated else 'Never' }}
+                            </p>
+                        </div>
+                        <div class="flex items-center space-x-1 ml-2">
+                            <button 
+                                onclick="refreshFeed({{ feed.id }})"
+                                class="p-1 text-gray-400 hover:text-primary transition-colors"
+                                title="Refresh"
+                            >
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                </svg>
+                            </button>
+                            <button 
+                                onclick="deleteFeed({{ feed.id }})"
+                                class="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                                title="Delete"
+                            >
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-gray-500 text-sm">No feeds yet. Add one to get started!</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Main Content - Recent Articles -->
+    <div class="lg:col-span-3">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div class="p-6 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">Recent Articles</h2>
+            </div>
+            
+            {% if articles %}
+                <div class="divide-y divide-gray-100">
+                    {% for article in articles %}
+                    <article class="p-6 hover:bg-gray-50 transition-colors">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <h3 class="text-lg font-medium text-gray-900 mb-2">
+                                    <a href="{{ article.link }}" 
+                                       target="_blank" 
+                                       rel="noopener noreferrer"
+                                       class="hover:text-primary transition-colors">
+                                        {{ article.title }}
+                                    </a>
+                                </h3>
+                                
+                                {% if article.description %}
+                                <p class="text-gray-600 text-sm mb-3 line-clamp-3">
+                                    {{ article.description | truncate(200) }}
+                                </p>
+                                {% endif %}
+                                
+                                <div class="flex items-center space-x-4 text-xs text-gray-500">
+                                    <span class="font-medium">{{ article.feed.title }}</span>
+                                    {% if article.author %}
+                                    <span>by {{ article.author }}</span>
+                                    {% endif %}
+                                    <span>{{ article.published_date.strftime('%B %d, %Y at %H:%M') if article.published_date else 'Unknown date' }}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="ml-4">
+                                <a href="{{ article.link }}" 
+                                   target="_blank" 
+                                   rel="noopener noreferrer"
+                                   class="inline-flex items-center px-3 py-2 text-sm text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                                    Read
+                                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+                    </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="p-6">
+                    <p class="text-gray-500 text-center">No articles yet. Add some feeds to see articles here!</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
