@@ -13,11 +13,12 @@ if sys.version_info >= (3, 13):
     sys.modules['cgi'] = CGIModule()
 
 # Now we can safely import the rest
-from fastapi import FastAPI, Request, Depends, HTTPException, Form
+from fastapi import FastAPI, Request, Depends, HTTPException, Form, File, UploadFile
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
+import logging
 from sqlalchemy import func, select, update
 import uvicorn
 from contextlib import asynccontextmanager
@@ -27,6 +28,19 @@ from datetime import datetime
 from models.database import init_db, get_db
 from services.rss_service import RSSService
 from models.models import Feed, Article
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),
+    ]
+)
+
+# Set specific log levels
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
 
 
 @asynccontextmanager
@@ -372,6 +386,99 @@ async def api_mark_all_read(db: AsyncSession = Depends(get_db)):
     await db.commit()
     
     return {"message": "All articles marked as read"}
+
+
+@app.get("/api/opml/export")
+async def api_export_opml(db: AsyncSession = Depends(get_db)):
+    """Export all feeds as OPML."""
+    from fastapi.responses import Response
+    
+    rss_service = RSSService(db)
+    opml_content = await rss_service.export_opml()
+    
+    return Response(
+        content=opml_content,
+        media_type="application/xml",
+        headers={
+            "Content-Disposition": "attachment; filename=stupidrss_feeds.opml"
+        }
+    )
+
+
+@app.post("/api/opml/import")
+async def api_import_opml(
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db)
+):
+    """Import feeds from OPML file with detailed validation and logging."""
+    logger = logging.getLogger(__name__)
+    
+    # Validate file type
+    if not file.filename.lower().endswith(('.opml', '.xml')):
+        logger.warning(f"Invalid file type uploaded: {file.filename}")
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Invalid file type. Expected .opml or .xml file, got: {file.filename}"
+        )
+    
+    logger.info(f"Processing OPML import from file: {file.filename}")
+    
+    try:
+        # Read file content
+        content = await file.read()
+        
+        # Validate file size (max 10MB)
+        if len(content) > 10 * 1024 * 1024:
+            logger.warning(f"OPML file too large: {len(content)} bytes")
+            raise HTTPException(status_code=400, detail="File too large. Maximum size is 10MB.")
+        
+        # Decode content
+        try:
+            opml_content = content.decode('utf-8')
+        except UnicodeDecodeError:
+            try:
+                opml_content = content.decode('latin-1')
+                logger.info("Decoded OPML using latin-1 encoding")
+            except UnicodeDecodeError:
+                logger.error("Failed to decode OPML file with UTF-8 or latin-1")
+                raise HTTPException(
+                    status_code=400, 
+                    detail="Invalid file encoding. Please ensure the file is encoded in UTF-8."
+                )
+        
+        logger.debug(f"OPML content length: {len(opml_content)} characters")
+        
+        rss_service = RSSService(db)
+        result = await rss_service.import_opml(opml_content)
+        
+        # Log summary
+        logger.info(
+            f"OPML import completed: {result['imported_count']}/{result['total_processed']} feeds imported, "
+            f"{len(result['errors'])} errors"
+        )
+        
+        # Log validation details if available
+        if 'validation_details' in result:
+            valid_feeds = [v for v in result['validation_details'] if v['is_valid']]
+            invalid_feeds = [v for v in result['validation_details'] if not v['is_valid']]
+            
+            logger.info(f"Feed validation: {len(valid_feeds)} valid, {len(invalid_feeds)} invalid")
+            
+            # Log details about invalid feeds
+            for invalid_feed in invalid_feeds:
+                logger.warning(
+                    f"Invalid feed: {invalid_feed['title']} ({invalid_feed['url']}) - "
+                    f"Error: {invalid_feed['error']}"
+                )
+        
+        return result
+        
+    except ValueError as e:
+        logger.error(f"OPML parsing error: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Invalid OPML format: {str(e)}")
+    except Exception as e:
+        logger.error(f"Unexpected error during OPML import: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to import OPML: {str(e)}")
 
 
 if __name__ == "__main__":

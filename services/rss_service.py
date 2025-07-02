@@ -274,3 +274,213 @@ class RSSService:
             self.db.add(article)
         
         await self.db.commit()
+
+    async def export_opml(self) -> str:
+        """Export all feeds to OPML format."""
+        feeds = await self.get_all_feeds()
+        feeds_by_category = await self.get_feeds_by_category()
+        
+        opml_header = '''<?xml version="1.0" encoding="UTF-8"?>
+<opml version="1.0">
+    <head>
+        <title>StupidRSS Feeds</title>
+        <dateCreated>{date}</dateCreated>
+        <ownerName>StupidRSS</ownerName>
+    </head>
+    <body>'''.format(date=datetime.utcnow().strftime('%a, %d %b %Y %H:%M:%S GMT'))
+        
+        opml_body = ""
+        for category, category_feeds in feeds_by_category.items():
+            opml_body += f'\n        <outline text="{category}" title="{category}">\n'
+            for feed in category_feeds:
+                # Escape XML special characters
+                title = feed.title.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;')
+                description = (feed.description or '').replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;')
+                opml_body += f'            <outline type="rss" text="{title}" title="{title}" xmlUrl="{feed.url}" description="{description}"/>\n'
+            opml_body += '        </outline>\n'
+        
+        opml_footer = '''    </body>
+</opml>'''
+        
+        return opml_header + opml_body + opml_footer
+
+    async def import_opml(self, opml_content: str) -> dict:
+        """Import feeds from OPML content with detailed logging and validation."""
+        from xml.etree import ElementTree as ET
+        import logging
+        
+        # Set up logging
+        logger = logging.getLogger(__name__)
+        
+        try:
+            root = ET.fromstring(opml_content)
+            logger.info("Successfully parsed OPML file")
+        except ET.ParseError as e:
+            logger.error(f"Failed to parse OPML: {str(e)}")
+            raise ValueError(f"Invalid OPML format: {str(e)}")
+        
+        imported_feeds = []
+        errors = []
+        validation_details = []
+        
+        # Build a parent map for finding categories
+        parent_map = {c: p for p in root.iter() for c in p}
+        
+        # Find all outline elements that have xmlUrl (RSS feeds)
+        feed_outlines = root.findall('.//outline[@xmlUrl]')
+        logger.info(f"Found {len(feed_outlines)} feeds in OPML file")
+        
+        for i, outline in enumerate(feed_outlines, 1):
+            url = outline.get('xmlUrl')
+            title = outline.get('text') or outline.get('title') or f'Unknown Feed {i}'
+            description = outline.get('description', '')
+            
+            logger.info(f"Processing feed {i}/{len(feed_outlines)}: {title} ({url})")
+            
+            try:
+                # Validate URL format
+                if not url or not url.strip():
+                    error_msg = f"Feed '{title}' has empty or missing URL"
+                    logger.warning(error_msg)
+                    errors.append(error_msg)
+                    continue
+                
+                # Clean and validate URL
+                url = url.strip()
+                if not (url.startswith('http://') or url.startswith('https://')):
+                    error_msg = f"Feed '{title}' has invalid URL format: {url}"
+                    logger.warning(error_msg)
+                    errors.append(error_msg)
+                    continue
+                
+                # Try to determine category from parent outline
+                category = "General"
+                parent = parent_map.get(outline)
+                if parent is not None and parent.tag == 'outline' and not parent.get('xmlUrl'):
+                    category = parent.get('text') or parent.get('title') or "General"
+                
+                logger.debug(f"Feed '{title}' assigned to category: {category}")
+                
+                # Check if feed already exists
+                existing_feed_result = await self.db.execute(
+                    select(Feed).where(Feed.url == url)
+                )
+                existing_feed = existing_feed_result.scalar_one_or_none()
+                
+                if existing_feed:
+                    error_msg = f"Feed already exists: {title} ({url})"
+                    logger.info(error_msg)
+                    errors.append(error_msg)
+                    continue
+                
+                # Validate RSS feed before adding
+                logger.debug(f"Validating RSS feed: {url}")
+                validation_result = await self._validate_rss_feed(url, title)
+                validation_details.append(validation_result)
+                
+                if not validation_result['is_valid']:
+                    error_msg = f"Feed '{title}' failed validation: {validation_result['error']}"
+                    logger.warning(error_msg)
+                    errors.append(error_msg)
+                    continue
+                
+                # Add the feed
+                logger.info(f"Adding feed: {title}")
+                feed = await self.add_feed(url, category)
+                imported_feeds.append({
+                    'title': feed.title,
+                    'url': feed.url,
+                    'category': feed.category
+                })
+                logger.info(f"Successfully imported feed: {feed.title}")
+                
+            except Exception as e:
+                error_msg = f"Failed to import feed '{title}' ({url}): {str(e)}"
+                logger.error(error_msg, exc_info=True)
+                errors.append(error_msg)
+        
+        logger.info(f"OPML import completed: {len(imported_feeds)} successful, {len(errors)} errors")
+        
+        return {
+            'imported_count': len(imported_feeds),
+            'imported_feeds': imported_feeds,
+            'errors': errors,
+            'validation_details': validation_details,
+            'total_processed': len(feed_outlines)
+        }
+
+    async def _validate_rss_feed(self, url: str, title: str) -> dict:
+        """Validate an RSS feed URL and return detailed information."""
+        import logging
+        
+        logger = logging.getLogger(__name__)
+        
+        validation_result = {
+            'url': url,
+            'title': title,
+            'is_valid': False,
+            'error': None,
+            'feed_title': None,
+            'feed_type': None,
+            'item_count': 0,
+            'response_code': None,
+            'redirect_url': None
+        }
+        
+        try:
+            logger.debug(f"Making HTTP request to: {url}")
+            async with httpx.AsyncClient(follow_redirects=True) as client:
+                response = await client.get(url, headers=self.headers, timeout=15.0)
+                validation_result['response_code'] = response.status_code
+                
+                # Check for redirects
+                if len(response.history) > 0:
+                    original_url = response.history[0].url
+                    final_url = response.url
+                    validation_result['redirect_url'] = str(final_url)
+                    logger.info(f"Feed redirected: {original_url} -> {final_url}")
+                
+                response.raise_for_status()
+            
+            logger.debug(f"Parsing RSS content for: {url}")
+            parsed_feed = feedparser.parse(response.text)
+            
+            # Check if feedparser detected any issues
+            if parsed_feed.bozo:
+                validation_result['error'] = f"Feed parser error: {parsed_feed.bozo_exception}"
+                logger.warning(f"Feed has parsing issues: {url} - {validation_result['error']}")
+                return validation_result
+            
+            # Extract feed information
+            feed_info = parsed_feed.feed
+            validation_result['feed_title'] = feed_info.get('title', 'Unknown')
+            validation_result['item_count'] = len(parsed_feed.entries)
+            
+            # Determine feed type
+            if hasattr(parsed_feed, 'version'):
+                validation_result['feed_type'] = parsed_feed.version
+            
+            # Check if feed has entries
+            if validation_result['item_count'] == 0:
+                validation_result['error'] = "Feed contains no entries"
+                logger.warning(f"Feed has no entries: {url}")
+                return validation_result
+            
+            # Check if feed has required fields
+            if not validation_result['feed_title'] or validation_result['feed_title'] == 'Unknown':
+                logger.warning(f"Feed has no title: {url}")
+            
+            validation_result['is_valid'] = True
+            logger.debug(f"Feed validation successful: {url} ({validation_result['item_count']} items)")
+            
+        except httpx.HTTPStatusError as e:
+            validation_result['error'] = f"HTTP {e.response.status_code}: {e.response.reason_phrase}"
+            logger.error(f"HTTP error for feed {url}: {validation_result['error']}")
+        except httpx.RequestError as e:
+            validation_result['error'] = f"Network error: {str(e)}"
+            logger.error(f"Network error for feed {url}: {validation_result['error']}")
+        except Exception as e:
+            validation_result['error'] = f"Validation error: {str(e)}"
+            logger.error(f"Unexpected error validating feed {url}: {validation_result['error']}")
+        
+        return validation_result

@@ -145,14 +145,14 @@
                         <button 
                             onclick="filterArticles('all')"
                             id="filter-all"
-                            class="px-3 py-1 text-sm rounded-full {% if request.args.get('unread_only') != 'true' %}bg-primary dark:bg-blue-600 text-white{% else %}bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors{% endif %}"
+                            class="px-3 py-1 text-sm rounded-full bg-primary dark:bg-blue-600 text-white"
                         >
                             All
                         </button>
                         <button 
                             onclick="filterArticles('unread')"
                             id="filter-unread"
-                            class="px-3 py-1 text-sm rounded-full {% if request.args.get('unread_only') == 'true' %}bg-primary dark:bg-blue-600 text-white{% else %}bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors{% endif %}"
+                            class="px-3 py-1 text-sm rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
                         >
                             Unread
                         </button>

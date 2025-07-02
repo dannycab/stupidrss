@@ -247,6 +247,37 @@
                         </svg>
                         View Saved Articles
                     </a>
+                    
+                    <!-- OPML Actions -->
+                    <div class="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
+                        <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">OPML Import/Export</h3>
+                        
+                        <a href="/api/opml/export" 
+                           class="w-full inline-flex items-center justify-center px-4 py-2 bg-purple-600 dark:bg-purple-500 text-white rounded-lg hover:bg-purple-700 dark:hover:bg-purple-600 transition-colors mb-3">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            Export Feeds (OPML)
+                        </a>
+                        
+                        <button 
+                            onclick="document.getElementById('opml-file-input').click()"
+                            class="w-full inline-flex items-center justify-center px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors"
+                        >
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path>
+                            </svg>
+                            Import Feeds (OPML)
+                        </button>
+                        
+                        <input 
+                            type="file" 
+                            id="opml-file-input" 
+                            accept=".opml,.xml" 
+                            style="display: none;" 
+                            onchange="importOpml(this)"
+                        >
+                    </div>
                 </div>
             </div>
         </div>
@@ -404,6 +435,177 @@ async function markAllRead() {
             console.error('Error marking all as read:', error);
         }
     }
+}
+
+// Import OPML file
+async function importOpml(input) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    // Validate file type
+    if (!file.name.toLowerCase().endsWith('.opml') && !file.name.toLowerCase().endsWith('.xml')) {
+        alert('Please select a valid OPML file (.opml or .xml)');
+        return;
+    }
+    
+    // Validate file size (10MB limit)
+    if (file.size > 10 * 1024 * 1024) {
+        alert('File too large. Maximum size is 10MB.');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    // Show loading indicator
+    const importButton = document.querySelector('button[onclick*="importOpml"]');
+    const originalText = importButton.innerHTML;
+    importButton.innerHTML = '<svg class="w-4 h-4 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>Importing...';
+    importButton.disabled = true;
+    
+    try {
+        const response = await fetch('/api/opml/import', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            let message = `OPML Import Results\n`;
+            message += `==================\n\n`;
+            
+            if (result.total_processed) {
+                message += `Total feeds processed: ${result.total_processed}\n`;
+            }
+            message += `Successfully imported: ${result.imported_count} feeds\n`;
+            message += `Failed imports: ${result.errors ? result.errors.length : 0}\n\n`;
+            
+            // Show successfully imported feeds
+            if (result.imported_feeds && result.imported_feeds.length > 0) {
+                message += `✅ Successfully Imported:\n`;
+                result.imported_feeds.forEach(feed => {
+                    message += `  • ${feed.title} (${feed.category})\n`;
+                });
+                message += `\n`;
+            }
+            
+            // Show validation details if available
+            if (result.validation_details && result.validation_details.length > 0) {
+                const invalidFeeds = result.validation_details.filter(v => !v.is_valid);
+                if (invalidFeeds.length > 0) {
+                    message += `❌ Failed Validation:\n`;
+                    invalidFeeds.forEach(feed => {
+                        message += `  • ${feed.title} (${feed.url})\n`;
+                        message += `    Error: ${feed.error}\n`;
+                        if (feed.response_code) {
+                            message += `    HTTP Status: ${feed.response_code}\n`;
+                        }
+                        if (feed.redirect_url) {
+                            message += `    Redirected to: ${feed.redirect_url}\n`;
+                        }
+                        message += `\n`;
+                    });
+                }
+            }
+            
+            // Show other errors
+            if (result.errors && result.errors.length > 0) {
+                message += `⚠️ Other Errors:\n`;
+                result.errors.forEach(error => {
+                    message += `  • ${error}\n`;
+                });
+            }
+            
+            // Show the detailed report in a modal or alert
+            if (result.imported_count > 0 || (result.errors && result.errors.length > 0)) {
+                // For better UX, create a modal dialog instead of alert for large content
+                showImportResultsModal(message, result);
+            } else {
+                alert(message);
+            }
+            
+            if (result.imported_count > 0) {
+                location.reload();
+            }
+        } else {
+            alert(`Import failed: ${result.detail || 'Unknown error'}`);
+        }
+    } catch (error) {
+        console.error('Error importing OPML:', error);
+        alert('Failed to import OPML file. Please check the file format and try again.');
+    } finally {
+        // Restore button state
+        importButton.innerHTML = originalText;
+        importButton.disabled = false;
+        
+        // Clear the input
+        input.value = '';
+    }
+}
+
+// Show import results in a modal dialog
+function showImportResultsModal(message, result) {
+    // Create modal if it doesn't exist
+    let modal = document.getElementById('import-results-modal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'import-results-modal';
+        modal.className = 'fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50';
+        modal.innerHTML = `
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-3xl mx-4 max-h-96 overflow-y-auto">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">OPML Import Results</h3>
+                    <button onclick="closeImportResultsModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <pre id="import-results-content" class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap font-mono bg-gray-100 dark:bg-gray-700 p-4 rounded overflow-x-auto"></pre>
+                <div class="mt-4 flex justify-end">
+                    <button onclick="closeImportResultsModal()" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors">
+                        Close
+                    </button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+    
+    document.getElementById('import-results-content').textContent = message;
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function closeImportResultsModal() {
+    const modal = document.getElementById('import-results-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+}
+            }
+            
+            if (result.imported_feeds && result.imported_feeds.length > 0) {
+                message += `\nImported feeds:\n`;
+                result.imported_feeds.forEach(feed => {
+                    message += `• ${feed.title} (${feed.category})\n`;
+                });
+            }
+            
+            alert(message);
+            location.reload();
+        } else {
+            alert(`Import failed: ${result.detail || 'Unknown error'}`);
+        }
+    } catch (error) {
+        console.error('Error importing OPML:', error);
+        alert('Failed to import OPML file. Please check the file format and try again.');
+    }
+    
+    // Clear the input
+    input.value = '';
 }
 
 // Close modal when clicking outside
