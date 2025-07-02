@@ -303,9 +303,13 @@ async function toggleSave(articleId, currentlySaved) {
 
 // Filter articles by read status
 function filterArticles(filter) {
+    console.log('Filtering articles by:', filter); // Debug log
+    
     const allBtn = document.getElementById('filter-all');
     const unreadBtn = document.getElementById('filter-unread');
     const articles = document.querySelectorAll('article');
+    
+    console.log('Found', articles.length, 'articles'); // Debug log
     
     // Update button styles
     if (filter === 'all') {
@@ -317,9 +321,11 @@ function filterArticles(filter) {
     }
     
     // Filter articles
-    articles.forEach(article => {
+    articles.forEach((article, index) => {
         const readBtn = article.querySelector('[id^="read-btn-"]');
-        const isRead = readBtn && readBtn.classList.contains('bg-green-100');
+        const isRead = readBtn && (readBtn.classList.contains('bg-green-100') || readBtn.className.includes('bg-green-100'));
+        
+        console.log(`Article ${index + 1}: isRead = ${isRead}`); // Debug log
         
         if (filter === 'all' || (filter === 'unread' && !isRead)) {
             article.style.display = 'block';
@@ -335,17 +341,6 @@ function filterByCategory(category) {
     currentUrl.searchParams.set('category', category);
     currentUrl.searchParams.set('page', '1'); // Reset to first page
     window.location.href = currentUrl.toString();
-}
-        if (!readBtn) return;
-        
-        const isRead = readBtn.className.includes('bg-green-100');
-        
-        if (filter === 'all' || (filter === 'unread' && !isRead)) {
-            article.style.display = '';
-        } else {
-            article.style.display = 'none';
-        }
-    });
 }
 </script>
 {% endblock %}
