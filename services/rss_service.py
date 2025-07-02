@@ -15,12 +15,20 @@ import re
 class RSSService:
     def __init__(self, db: AsyncSession):
         self.db = db
+        # Standard headers to avoid 403 errors from RSS feeds
+        self.headers = {
+            'User-Agent': 'Mozilla/5.0 (compatible; StupidRSS/1.0; RSS Reader)',
+            'Accept': 'application/rss+xml, application/xml, text/xml, */*',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Accept-Encoding': 'gzip, deflate',
+            'Connection': 'keep-alive'
+        }
 
     async def add_feed(self, url: str, category: str = "General") -> Feed:
         """Add a new RSS feed with optional category."""
         # Validate the feed by parsing it first
         async with httpx.AsyncClient() as client:
-            response = await client.get(url, timeout=10.0)
+            response = await client.get(url, headers=self.headers, timeout=10.0)
             response.raise_for_status()
             
         parsed_feed = feedparser.parse(response.text)
@@ -84,7 +92,7 @@ class RSSService:
             raise ValueError("Feed not found")
         
         async with httpx.AsyncClient() as client:
-            response = await client.get(feed.url, timeout=10.0)
+            response = await client.get(feed.url, headers=self.headers, timeout=10.0)
             response.raise_for_status()
             
         parsed_feed = feedparser.parse(response.text)
@@ -175,7 +183,7 @@ class RSSService:
         
         try:
             async with httpx.AsyncClient() as client:
-                response = await client.get(article.link, timeout=15.0)
+                response = await client.get(article.link, headers=self.headers, timeout=15.0)
                 response.raise_for_status()
                 
             # Use readability to extract main content
