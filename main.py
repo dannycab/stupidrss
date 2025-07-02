@@ -61,6 +61,8 @@ def extract_youtube_id(url):
         r'(?:https?://)?(?:www\.)?youtube\.com/embed/([a-zA-Z0-9_-]{11})',
         r'(?:https?://)?(?:www\.)?youtube\.com/v/([a-zA-Z0-9_-]{11})',
         r'(?:https?://)?(?:m\.)?youtube\.com/watch\?v=([a-zA-Z0-9_-]{11})',
+        r'(?:https?://)?(?:www\.)?youtube\.com/shorts/([a-zA-Z0-9_-]{11})',
+        r'(?:https?://)?(?:m\.)?youtube\.com/shorts/([a-zA-Z0-9_-]{11})',
     ]
     
     for pattern in patterns:

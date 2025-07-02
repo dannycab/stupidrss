@@ -92,7 +92,11 @@
                     </div>
                     <p class="text-sm text-gray-500 dark:text-gray-400 mt-2 text-center">
                         <a href="{{ article.link }}" target="_blank" rel="noopener noreferrer" class="hover:text-blue-500">
-                            Watch on YouTube
+                            {% if '/shorts/' in article.link %}
+                                Watch Short on YouTube
+                            {% else %}
+                                Watch on YouTube
+                            {% endif %}
                         </a>
                     </p>
                 </div>
