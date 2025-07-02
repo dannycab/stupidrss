@@ -37,14 +37,23 @@ app = FastAPI(title="StupidRSS", description="A minimalistic RSS reader", lifesp
 
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/docs-static", StaticFiles(directory="docs"), name="docs-static")
 
 # Templates
 templates = Jinja2Templates(directory="templates")
 
 
 @app.get("/", response_class=HTMLResponse)
-async def read_root(request: Request, db: AsyncSession = Depends(get_db)):
-    """Main page showing all feeds and recent articles."""
+async def read_docs(request: Request):
+    """Documentation homepage."""
+    with open("docs/index.html", "r") as f:
+        content = f.read()
+    return HTMLResponse(content=content)
+
+
+@app.get("/app", response_class=HTMLResponse)
+async def read_app(request: Request, db: AsyncSession = Depends(get_db)):
+    """Main RSS reader application."""
     rss_service = RSSService(db)
     feeds = await rss_service.get_all_feeds()
     recent_articles = await rss_service.get_recent_articles(limit=20)
@@ -65,7 +74,7 @@ async def add_feed(
     rss_service = RSSService(db)
     try:
         feed = await rss_service.add_feed(url)
-        return RedirectResponse(url="/", status_code=303)
+        return RedirectResponse(url="/app", status_code=303)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to add feed: {str(e)}")
 
@@ -76,7 +85,7 @@ async def refresh_feed(feed_id: int, db: AsyncSession = Depends(get_db)):
     rss_service = RSSService(db)
     try:
         await rss_service.refresh_feed(feed_id)
-        return RedirectResponse(url="/", status_code=303)
+        return RedirectResponse(url="/app", status_code=303)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to refresh feed: {str(e)}")
 
