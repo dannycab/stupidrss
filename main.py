@@ -55,16 +55,45 @@ async def read_docs(request: Request):
 
 
 @app.get("/app", response_class=HTMLResponse)
-async def read_app(request: Request, db: AsyncSession = Depends(get_db)):
+async def read_app(
+    request: Request, 
+    category: str = None,
+    page: int = 1,
+    limit: int = 10,
+    db: AsyncSession = Depends(get_db)
+):
     """Main RSS reader application."""
     rss_service = RSSService(db)
     feeds = await rss_service.get_all_feeds()
     feeds_by_category = await rss_service.get_feeds_by_category()
-    recent_articles = await rss_service.get_recent_articles(limit=20)
+    
+    # Calculate offset
+    offset = (page - 1) * limit
+    
+    # Get articles with pagination and optional category filter
+    if category and category != "all":
+        recent_articles = await rss_service.get_articles_by_category(category, limit=limit, offset=offset)
+    else:
+        recent_articles = await rss_service.get_recent_articles(limit=limit, offset=offset)
+    
+    # Get total count for pagination
+    total_articles = await rss_service.get_total_articles_count(category if category != "all" else None)
+    
+    # Check if there are more articles
+    has_more = (offset + limit) < total_articles
     
     return templates.TemplateResponse(
         "index.html", 
-        {"request": request, "feeds": feeds, "feeds_by_category": feeds_by_category, "articles": recent_articles}
+        {
+            "request": request, 
+            "feeds": feeds, 
+            "feeds_by_category": feeds_by_category, 
+            "articles": recent_articles,
+            "current_category": category or "all",
+            "current_page": page,
+            "has_more": has_more,
+            "total_articles": total_articles
+        }
     )
 
 
@@ -205,6 +234,10 @@ class ReadStatusRequest(BaseModel):
 class SaveStatusRequest(BaseModel):
     is_saved: bool
 
+class UpdateFeedRequest(BaseModel):
+    title: str = None
+    category: str = None
+
 
 # API Endpoints for programmatic access
 @app.get("/api/feeds")
@@ -251,18 +284,24 @@ async def api_get_feed_articles(feed_id: int, db: AsyncSession = Depends(get_db)
 
 
 @app.put("/api/feeds/{feed_id}")
-async def api_update_feed(feed_id: int, title: str = None, db: AsyncSession = Depends(get_db)):
-    """Update a feed's metadata."""
+async def api_update_feed(
+    feed_id: int, 
+    request: UpdateFeedRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    """Update a feed's metadata including title and category."""
     rss_service = RSSService(db)
     feed = await rss_service.get_feed_by_id(feed_id)
     if not feed:
         raise HTTPException(status_code=404, detail="Feed not found")
     
-    if title:
-        feed.title = title
-        await db.commit()
+    if request.title:
+        feed.title = request.title
+    if request.category:
+        feed.category = request.category
     
-    return {"message": "Feed updated", "id": feed.id, "title": feed.title}
+    await db.commit()
+    return {"message": "Feed updated", "id": feed.id, "title": feed.title, "category": feed.category}
 
 
 @app.post("/api/articles/{article_id}/read")
@@ -310,28 +349,6 @@ async def api_scrape_article(article_id: int, db: AsyncSession = Depends(get_db)
 
 
 # Admin API endpoints
-@app.put("/api/feeds/{feed_id}")
-async def api_update_feed_admin(
-    feed_id: int, 
-    title: str = None, 
-    category: str = None,
-    db: AsyncSession = Depends(get_db)
-):
-    """Update a feed's metadata including category."""
-    rss_service = RSSService(db)
-    feed = await rss_service.get_feed_by_id(feed_id)
-    if not feed:
-        raise HTTPException(status_code=404, detail="Feed not found")
-    
-    if title:
-        feed.title = title
-    if category:
-        await rss_service.update_feed_category(feed_id, category)
-        feed.category = category
-    
-    await db.commit()
-    return {"message": "Feed updated", "id": feed.id, "title": feed.title, "category": feed.category}
-
 @app.post("/api/feeds/refresh-all")
 async def api_refresh_all_feeds(db: AsyncSession = Depends(get_db)):
     """Refresh all active feeds."""

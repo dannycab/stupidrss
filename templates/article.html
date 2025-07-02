@@ -80,17 +80,17 @@
         <div class="p-6">
             {% if article.full_content %}
                 <!-- Full scraped content -->
-                <div class="prose prose-lg dark:prose-invert max-w-none">
+                <div class="prose prose-lg dark:prose-invert max-w-none article-content">
                     {{ article.full_content|safe }}
                 </div>
             {% elif article.content %}
                 <!-- RSS content -->
-                <div class="prose prose-lg dark:prose-invert max-w-none">
+                <div class="prose prose-lg dark:prose-invert max-w-none article-content">
                     {{ article.content|safe }}
                 </div>
             {% else %}
                 <!-- Fallback to description -->
-                <div class="text-gray-600 dark:text-gray-300 mb-6">
+                <div class="text-gray-100 dark:text-gray-100 mb-6 article-content">
                     {% if article.description %}
                         <p>{{ article.description }}</p>
                     {% else %}
@@ -112,6 +112,79 @@
             {% endif %}
         </div>
     </div>
+
+<style>
+.article-content {
+    color: white !important;
+    line-height: 1.8;
+}
+
+.article-content p {
+    color: white !important;
+    margin-bottom: 1.5rem;
+    font-size: 1.1rem;
+}
+
+.article-content h1, .article-content h2, .article-content h3, 
+.article-content h4, .article-content h5, .article-content h6 {
+    color: white !important;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+}
+
+.article-content img {
+    max-width: 100%;
+    height: auto;
+    margin: 1.5rem auto;
+    display: block;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.article-content a {
+    color: #60a5fa !important;
+    text-decoration: underline;
+}
+
+.article-content a:hover {
+    color: #93c5fd !important;
+}
+
+.article-content blockquote {
+    border-left: 4px solid #374151;
+    padding-left: 1rem;
+    margin: 1.5rem 0;
+    color: #d1d5db !important;
+    font-style: italic;
+}
+
+.article-content ul, .article-content ol {
+    margin: 1rem 0;
+    padding-left: 2rem;
+}
+
+.article-content li {
+    color: white !important;
+    margin-bottom: 0.5rem;
+}
+
+.article-content code {
+    background-color: #374151;
+    color: #f3f4f6;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.article-content pre {
+    background-color: #374151;
+    color: #f3f4f6;
+    padding: 1rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 1.5rem 0;
+}
+</style>
 
     <!-- Navigation -->
     <div class="mt-6 flex justify-between">

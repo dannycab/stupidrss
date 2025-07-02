@@ -129,20 +129,30 @@
     <div class="lg:col-span-3">
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 transition-colors">
             <div class="p-6 border-b border-gray-200 dark:border-gray-700">
-                <div class="flex items-center justify-between">
+                <div class="flex items-center justify-between mb-4">
                     <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Recent Articles</h2>
                     <div class="flex space-x-2">
+                        <select 
+                            id="category-filter"
+                            onchange="filterByCategory(this.value)"
+                            class="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        >
+                            <option value="all" {% if current_category == "all" %}selected{% endif %}>All Categories</option>
+                            {% for category in feeds_by_category.keys() %}
+                            <option value="{{ category }}" {% if current_category == category %}selected{% endif %}>{{ category }}</option>
+                            {% endfor %}
+                        </select>
                         <button 
                             onclick="filterArticles('all')"
                             id="filter-all"
-                            class="px-3 py-1 text-sm rounded-full bg-primary dark:bg-blue-600 text-white"
+                            class="px-3 py-1 text-sm rounded-full {% if request.args.get('unread_only') != 'true' %}bg-primary dark:bg-blue-600 text-white{% else %}bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors{% endif %}"
                         >
                             All
                         </button>
                         <button 
                             onclick="filterArticles('unread')"
                             id="filter-unread"
-                            class="px-3 py-1 text-sm rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                            class="px-3 py-1 text-sm rounded-full {% if request.args.get('unread_only') == 'true' %}bg-primary dark:bg-blue-600 text-white{% else %}bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors{% endif %}"
                         >
                             Unread
                         </button>
@@ -226,6 +236,32 @@
                 <div class="p-6">
                     <p class="text-gray-500 dark:text-gray-400 text-center">No articles yet. Add some feeds to see articles here!</p>
                 </div>
+            {% endif %}
+            
+            <!-- Pagination -->
+            {% if articles %}
+            <div class="p-6 border-t border-gray-200 dark:border-gray-700">
+                <div class="flex items-center justify-between">
+                    <div class="text-sm text-gray-500 dark:text-gray-400">
+                        Showing {{ ((current_page - 1) * 10) + 1 }} - {{ ((current_page - 1) * 10) + articles|length }} of {{ total_articles }} articles
+                    </div>
+                    <div class="flex space-x-2">
+                        {% if current_page > 1 %}
+                        <a href="?category={{ current_category }}&page={{ current_page - 1 }}" 
+                           class="inline-flex items-center px-3 py-2 text-sm text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                            Previous
+                        </a>
+                        {% endif %}
+                        
+                        {% if has_more %}
+                        <a href="?category={{ current_category }}&page={{ current_page + 1 }}" 
+                           class="inline-flex items-center px-3 py-2 text-sm text-white bg-primary dark:bg-blue-600 rounded-lg hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors">
+                            Next
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
             {% endif %}
         </div>
     </div>
@@ -352,6 +388,23 @@ function filterArticles(filter) {
     // Filter articles
     articles.forEach(article => {
         const readBtn = article.querySelector('[id^="read-btn-"]');
+        const isRead = readBtn && readBtn.classList.contains('bg-green-100');
+        
+        if (filter === 'all' || (filter === 'unread' && !isRead)) {
+            article.style.display = 'block';
+        } else {
+            article.style.display = 'none';
+        }
+    });
+}
+
+// Filter by category
+function filterByCategory(category) {
+    const currentUrl = new URL(window.location);
+    currentUrl.searchParams.set('category', category);
+    currentUrl.searchParams.set('page', '1'); // Reset to first page
+    window.location.href = currentUrl.toString();
+}
         if (!readBtn) return;
         
         const isRead = readBtn.className.includes('bg-green-100');

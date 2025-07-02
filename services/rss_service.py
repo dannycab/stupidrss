@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, desc, update
+from sqlalchemy import select, desc, update, func
 from sqlalchemy.orm import selectinload
 from models.models import Feed, Article
 import feedparser
@@ -109,8 +109,8 @@ class RSSService:
             await self.db.delete(feed)
             await self.db.commit()
 
-    async def get_recent_articles(self, limit: int = 20, unread_only: bool = False) -> List[Article]:
-        """Get recent articles across all feeds."""
+    async def get_recent_articles(self, limit: int = 20, offset: int = 0, unread_only: bool = False) -> List[Article]:
+        """Get recent articles across all feeds with pagination."""
         query = (
             select(Article)
             .options(selectinload(Article.feed))
@@ -121,10 +121,40 @@ class RSSService:
         if unread_only:
             query = query.where(Article.is_read == False)
             
-        query = query.order_by(desc(Article.published_date)).limit(limit)
+        query = query.order_by(desc(Article.published_date)).offset(offset).limit(limit)
         
         result = await self.db.execute(query)
         return result.scalars().all()
+
+    async def get_articles_by_category(self, category: str, limit: int = 20, offset: int = 0) -> List[Article]:
+        """Get articles from feeds in a specific category with pagination."""
+        query = (
+            select(Article)
+            .options(selectinload(Article.feed))
+            .join(Feed)
+            .where(Feed.is_active == True)
+            .where(Feed.category == category)
+            .order_by(desc(Article.published_date))
+            .offset(offset)
+            .limit(limit)
+        )
+        
+        result = await self.db.execute(query)
+        return result.scalars().all()
+
+    async def get_total_articles_count(self, category: str = None) -> int:
+        """Get total count of articles, optionally filtered by category."""
+        query = (
+            select(func.count(Article.id))
+            .join(Feed)
+            .where(Feed.is_active == True)
+        )
+        
+        if category:
+            query = query.where(Feed.category == category)
+        
+        result = await self.db.execute(query)
+        return result.scalar()
 
     async def get_saved_articles(self) -> List[Article]:
         """Get all saved articles."""
