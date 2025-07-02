@@ -151,6 +151,46 @@
             }
         }
 
+        // Refresh feed function - used on multiple pages
+        async function refreshFeed(feedId) {
+            try {
+                const response = await fetch(`/feeds/${feedId}/refresh`, {
+                    method: 'POST'
+                });
+                if (response.ok) {
+                    location.reload();
+                }
+            } catch (error) {
+                console.error('Error refreshing feed:', error);
+            }
+        }
+
+        // Enhanced delete function that requires typing "DELETE" to confirm
+        async function deleteFeedWithConfirmation(feedId, feedTitle) {
+            const userInput = prompt(`Are you sure you want to delete "${feedTitle}"?\n\nThis will permanently delete the feed and ALL its articles.\n\nTo confirm, type "DELETE" (all caps):`);
+            
+            if (userInput === "DELETE") {
+                try {
+                    const response = await fetch(`/feeds/${feedId}`, {
+                        method: 'DELETE'
+                    });
+                    if (response.ok) {
+                        alert('Feed deleted successfully!');
+                        // Redirect to home page after deletion
+                        window.location.href = '/';
+                    } else {
+                        const errorData = await response.json().catch(() => ({}));
+                        alert(`Error deleting feed: ${errorData.detail || 'Unknown error'}`);
+                    }
+                } catch (error) {
+                    console.error('Error deleting feed:', error);
+                    alert(`Error deleting feed: ${error.message}`);
+                }
+            } else if (userInput !== null) {
+                alert('Deletion cancelled. You must type "DELETE" exactly to confirm.');
+            }
+        }
+
         // Initialize dark mode on page load
         initDarkMode();
     </script>
