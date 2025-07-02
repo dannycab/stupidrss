@@ -1,5 +1,11 @@
 # StupidRSS
 
+> **Vibe Coding Project Notice**
+>
+> This project is developed in a freeform, improvisational, and experimental style. **No pull requests will be honored.**
+>
+> If you have a feature request or bug, please [open an issue](https://github.com/dannycab/stupidrss/issues) and I'll vibe code it (maybe it works, maybe not). Thanks for understanding!
+
 A fast, minimalistic RSS reader webapp built with FastAPI and Tailwind CSS.
 
 🌐 **Live Demo**: [Documentation](http://dannycaballero.info/stupidrss)  
