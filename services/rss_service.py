@@ -1,5 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, desc, update
+from sqlalchemy.orm import selectinload
 from models.models import Feed, Article
 import feedparser
 import httpx
@@ -47,7 +48,10 @@ class RSSService:
     async def get_all_feeds(self) -> List[Feed]:
         """Get all active feeds."""
         result = await self.db.execute(
-            select(Feed).where(Feed.is_active == True).order_by(Feed.category, Feed.title)
+            select(Feed)
+            .options(selectinload(Feed.articles))
+            .where(Feed.is_active == True)
+            .order_by(Feed.category, Feed.title)
         )
         return result.scalars().all()
 
@@ -101,6 +105,7 @@ class RSSService:
         """Get recent articles across all feeds."""
         query = (
             select(Article)
+            .options(selectinload(Article.feed))
             .join(Feed)
             .where(Feed.is_active == True)
         )
@@ -117,6 +122,7 @@ class RSSService:
         """Get all saved articles."""
         result = await self.db.execute(
             select(Article)
+            .options(selectinload(Article.feed))
             .join(Feed)
             .where(Feed.is_active == True, Article.is_saved == True)
             .order_by(desc(Article.published_date))
@@ -127,14 +133,19 @@ class RSSService:
         """Get all articles for a specific feed."""
         result = await self.db.execute(
             select(Article)
+            .options(selectinload(Article.feed))
             .where(Article.feed_id == feed_id)
             .order_by(desc(Article.published_date))
         )
         return result.scalars().all()
 
     async def get_article_by_id(self, article_id: int) -> Optional[Article]:
-        """Get an article by ID."""
-        result = await self.db.execute(select(Article).where(Article.id == article_id))
+        """Get an article by ID with feed relationship loaded."""
+        result = await self.db.execute(
+            select(Article)
+            .options(selectinload(Article.feed))
+            .where(Article.id == article_id)
+        )
         return result.scalar_one_or_none()
 
     async def mark_article_read(self, article_id: int, is_read: bool = True):
