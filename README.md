@@ -19,6 +19,10 @@ A fast, minimalistic RSS reader webapp built with FastAPI and Tailwind CSS.
 - 🔄 **Real-time updates**: Async RSS parsing and fetching
 - 💾 **SQLite database**: Lightweight, zero-config storage
 - 🔗 **Easy feed management**: Add, remove, and refresh feeds with one click
+- 🧹 **Smart Content Cleaning**: Automatically strips HTML tags while preserving formatting
+- 📺 **YouTube-Optimized**: Removes spam and duplicate content from video feeds
+- 🎯 **Enhanced UX**: Streamlined buttons, improved navigation, and consistent UI
+- 🔍 **Filter Support**: Built-in article filtering and search capabilities
 
 ## Tech Stack
 
@@ -90,6 +94,24 @@ Simply click "Add Feed" and paste any RSS/Atom feed URL. The app will:
 - Extract feed metadata
 - Fetch initial articles
 - Start tracking updates
+- Automatically clean HTML content for better readability
+- Remove duplicate descriptions and spam content
+
+## Content Features
+
+**Smart Content Cleaning**: StupidRSS automatically processes all article content to:
+- Strip HTML tags while preserving formatting (lists, paragraphs, line breaks)
+- Remove YouTube spam and promotional content
+- Eliminate duplicate descriptions
+- Convert HTML entities to readable text
+- Maintain proper list formatting with bullets and numbering
+
+**Enhanced User Experience**:
+- Standardized "Add Feed" and "Delete" buttons across all pages
+- Enhanced delete confirmation requiring "DELETE" to be typed
+- Streamlined feed display on the home page
+- Working filter buttons for article management
+- Consistent UI styling and responsive design
 
 ## API Endpoints
 
