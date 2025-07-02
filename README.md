@@ -48,6 +48,22 @@ A fast, minimalistic RSS reader webapp built with FastAPI and Tailwind CSS.
 
 4. **Add RSS feeds** and start reading!
 
+## Screenshots
+
+### Main Page - Feed Overview
+![Main Page](docs/images/main-page.png)
+
+### Article Reading Experience  
+![Article Page](docs/images/article-page.png)
+
+### Admin Panel - Feed Management
+![Admin Page](docs/images/admin-page.png)
+
+### Saved Articles
+![Saved Page](docs/images/saved-page.png)
+
+## API Routes
+
 - `GET /app` - Main RSS reader application
 - `GET /docs` - Interactive OpenAPI documentation
 - `GET /redoc` - Alternative API documentation
