@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto flex gap-6">
+    <!-- Left Sidebar -->
+    <div class="w-64 flex-shrink-0">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 transition-colors">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Navigation</h2>
+            <nav class="space-y-2">
+                <a href="/" class="block px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m7 7 10 0"></path>
+                    </svg>
+                    All Articles
+                </a>
+                <a href="/categories" class="block px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14-2v6.5A2.5 2.5 0 0016.5 18h-9A2.5 2.5 0 005 15.5V9a2.5 2.5 0 012.5-2.5h9A2.5 2.5 0 0119 9z"></path>
+                    </svg>
+                    Categories
+                </a>
+                <a href="/saved" class="block px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
+                    </svg>
+                    Saved Articles
+                </a>
+                <a href="/admin" class="block px-3 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    Admin
+                </a>
+            </nav>
+            
+            <!-- Feeds in this category -->
+            {% if feeds %}
+            <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Feeds in {{ category_name }}</h3>
+                <div class="space-y-2">
+                    {% for feed in feeds %}
+                    <a href="/feeds/{{ feed.id }}/articles" 
+                       class="block px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                        {{ feed.title }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 transition-colors">
+            <!-- Header -->
+            <div class="border-b border-gray-200 dark:border-gray-700 p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <nav class="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400 mb-2">
+                            <a href="/categories" class="hover:text-gray-700 dark:hover:text-gray-300">Categories</a>
+                            <span>›</span>
+                            <span class="text-gray-900 dark:text-white">{{ category_name }}</span>
+                        </nav>
+                        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ category_name }}</h1>
+                        <p class="text-gray-600 dark:text-gray-400 mt-1">{{ feeds|length }} feed{% if feeds|length != 1 %}s{% endif %}</p>
+                    </div>
+                </div>
+                
+                <!-- Filter Buttons -->
+                <div class="flex items-center space-x-2">
+                    <button 
+                        onclick="filterArticles('all')"
+                        id="filter-all"
+                        class="px-3 py-1 text-sm rounded-full bg-primary dark:bg-blue-600 text-white"
+                    >
+                        All
+                    </button>
+                    <button 
+                        onclick="filterArticles('unread')"
+                        id="filter-unread"
+                        class="px-3 py-1 text-sm rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                    >
+                        Unread
+                    </button>
+                    <button 
+                        onclick="filterArticles('saved')"
+                        id="filter-saved"
+                        class="px-3 py-1 text-sm rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                    >
+                        Saved
+                    </button>
+                </div>
+            </div>
+
+            <!-- Articles List -->
+            <div class="p-6">
+                {% if articles %}
+                    <div class="divide-y divide-gray-100 dark:divide-gray-700">
+                        {% for article in articles %}
+                        <article class="py-6 first:pt-0 last:pb-0 transition-colors" data-article-id="{{ article.id }}">
+                            <div class="flex items-start space-x-4">
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-start justify-between">
+                                        <div class="flex-1">
+                                            <h2 class="text-lg font-semibold text-gray-900 dark:text-white hover:text-primary dark:hover:text-blue-400 transition-colors">
+                                                <a href="/articles/{{ article.id }}" class="hover:underline">{{ article.title }}</a>
+                                            </h2>
+                                            <div class="flex items-center text-sm text-gray-500 dark:text-gray-400 mt-2 space-x-2">
+                                                <span>{{ article.feed.title }}</span>
+                                                <span>•</span>
+                                                <time>{{ article.published_date.strftime('%B %d, %Y at %I:%M %p') if article.published_date else 'Unknown date' }}</time>
+                                                {% if article.author %}
+                                                <span>•</span>
+                                                <span>by {{ article.author }}</span>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            {% if article.description %}
+                                            <div class="mt-3 text-gray-600 dark:text-gray-300 line-clamp-3">
+                                                {{ article.description | clean_content | truncate(200) }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <div class="flex items-start space-x-2 ml-4 flex-shrink-0">
+                                            <!-- Read/Unread Button -->
+                                            <button 
+                                                onclick="toggleRead({{ article.id }}, {{ 'true' if article.is_read else 'false' }})"
+                                                id="read-btn-{{ article.id }}"
+                                                class="inline-flex items-center px-2 py-1 text-xs rounded {% if article.is_read %}bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400{% else %}bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300{% endif %} hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                                                title="{% if article.is_read %}Mark as unread{% else %}Mark as read{% endif %}"
+                                            >
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    {% if article.is_read %}
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                                    {% else %}
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                    {% endif %}
+                                                </svg>
+                                            </button>
+                                            
+                                            <!-- Save/Unsave Button -->
+                                            <button 
+                                                onclick="toggleSave({{ article.id }}, {{ 'true' if article.is_saved else 'false' }})"
+                                                id="save-btn-{{ article.id }}"
+                                                class="inline-flex items-center px-2 py-1 text-xs rounded {% if article.is_saved %}bg-yellow-100 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400{% else %}bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300{% endif %} hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                                                title="{% if article.is_saved %}Remove from saved{% else %}Save for later{% endif %}"
+                                            >
+                                                <svg class="w-3 h-3" fill="{% if article.is_saved %}currentColor{% else %}none{% endif %}" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </article>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Pagination could be added here if needed -->
+                    
+                {% else %}
+                    <div class="text-center py-12">
+                        <svg class="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No articles in {{ category_name }}</h3>
+                        <p class="text-gray-500 dark:text-gray-400">There are no articles in this category yet.</p>
+                        <a href="/categories" class="inline-block mt-4 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors">
+                            ← Back to Categories
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Copy the toggle functions from index.html
+async function toggleRead(articleId, currentlyRead) {
+    try {
+        const response = await fetch(`/api/articles/${articleId}/read`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ is_read: !currentlyRead })
+        });
+
+        if (response.ok) {
+            const btn = document.getElementById(`read-btn-${articleId}`);
+            if (!currentlyRead) {
+                btn.className = 'inline-flex items-center px-2 py-1 text-xs rounded bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors';
+                btn.innerHTML = '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
+                btn.setAttribute('onclick', `toggleRead(${articleId}, true)`);
+                btn.title = 'Mark as unread';
+            } else {
+                btn.className = 'inline-flex items-center px-2 py-1 text-xs rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors';
+                btn.innerHTML = '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>';
+                btn.setAttribute('onclick', `toggleRead(${articleId}, false)`);
+                btn.title = 'Mark as read';
+            }
+        }
+    } catch (error) {
+        console.error('Error toggling read status:', error);
+    }
+}
+
+async function toggleSave(articleId, currentlySaved) {
+    try {
+        const response = await fetch(`/api/articles/${articleId}/save`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ is_saved: !currentlySaved })
+        });
+
+        if (response.ok) {
+            const btn = document.getElementById(`save-btn-${articleId}`);
+            if (!currentlySaved) {
+                btn.className = 'inline-flex items-center px-2 py-1 text-xs rounded bg-yellow-100 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors';
+                btn.innerHTML = '<svg class="w-3 h-3" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path></svg>';
+                btn.setAttribute('onclick', `toggleSave(${articleId}, true)`);
+                btn.title = 'Remove from saved';
+            } else {
+                btn.className = 'inline-flex items-center px-2 py-1 text-xs rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors';
+                btn.innerHTML = '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path></svg>';
+                btn.setAttribute('onclick', `toggleSave(${articleId}, false)`);
+                btn.title = 'Save for later';
+            }
+        }
+    } catch (error) {
+        console.error('Error toggling save status:', error);
+    }
+}
+
+// Filter articles by read/saved status
+function filterArticles(filter) {
+    const allBtn = document.getElementById('filter-all');
+    const unreadBtn = document.getElementById('filter-unread');
+    const savedBtn = document.getElementById('filter-saved');
+    const articles = document.querySelectorAll('article');
+    
+    // Update button styles
+    const activeClass = 'px-3 py-1 text-sm rounded-full bg-primary dark:bg-blue-600 text-white';
+    const inactiveClass = 'px-3 py-1 text-sm rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors';
+    
+    allBtn.className = filter === 'all' ? activeClass : inactiveClass;
+    unreadBtn.className = filter === 'unread' ? activeClass : inactiveClass;
+    savedBtn.className = filter === 'saved' ? activeClass : inactiveClass;
+    
+    // Filter articles
+    articles.forEach((article) => {
+        const readBtn = article.querySelector('[id^="read-btn-"]');
+        const saveBtn = article.querySelector('[id^="save-btn-"]');
+        const isRead = readBtn && (readBtn.classList.contains('bg-green-100') || readBtn.className.includes('bg-green-100'));
+        const isSaved = saveBtn && (saveBtn.classList.contains('bg-yellow-100') || saveBtn.className.includes('bg-yellow-100'));
+        
+        let showArticle = false;
+        if (filter === 'all') {
+            showArticle = true;
+        } else if (filter === 'unread' && !isRead) {
+            showArticle = true;
+        } else if (filter === 'saved' && isSaved) {
+            showArticle = true;
+        }
+        
+        article.style.display = showArticle ? 'block' : 'none';
+    });
+}
+</script>
+{% endblock %}

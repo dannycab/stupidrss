@@ -386,6 +386,48 @@ async def saved_articles(request: Request, db: AsyncSession = Depends(get_db)):
     )
 
 
+@app.get("/categories", response_class=HTMLResponse)
+async def categories_page(request: Request, filter: str = "all", db: AsyncSession = Depends(get_db)):
+    """Show categories with articles organized by category."""
+    rss_service = RSSService(db)
+    
+    # Get categories with their articles (limited to 5 per category initially)
+    categories_data = await rss_service.get_categories_with_articles(limit=5, filter=filter)
+    
+    return templates.TemplateResponse(
+        "categories.html",
+        {
+            "request": request, 
+            "categories_data": categories_data,
+            "current_filter": filter
+        }
+    )
+
+
+@app.get("/categories/{category_name}", response_class=HTMLResponse)
+async def category_articles(request: Request, category_name: str, page: int = 1, db: AsyncSession = Depends(get_db)):
+    """Show all articles for a specific category."""
+    rss_service = RSSService(db)
+    
+    # Get feeds for this category
+    feeds_by_category = await rss_service.get_feeds_by_category()
+    feeds = feeds_by_category.get(category_name, [])
+    
+    # Get articles for this category with pagination
+    articles = await rss_service.get_articles_by_category(category_name, page=page, per_page=20)
+    
+    return templates.TemplateResponse(
+        "category_articles.html",
+        {
+            "request": request,
+            "category_name": category_name,
+            "feeds": feeds,
+            "articles": articles,
+            "current_page": page
+        }
+    )
+
+
 @app.get("/admin", response_class=HTMLResponse)
 async def admin_panel(request: Request, db: AsyncSession = Depends(get_db)):
     """Admin panel for managing feeds and articles."""

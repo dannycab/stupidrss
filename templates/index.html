@@ -131,6 +131,13 @@
                         >
                             Unread
                         </button>
+                        <button 
+                            onclick="filterArticles('saved')"
+                            id="filter-saved"
+                            class="px-3 py-1 text-sm rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                        >
+                            Saved
+                        </button>
                     </div>
                 </div>
             </div>
@@ -307,31 +314,38 @@ function filterArticles(filter) {
     
     const allBtn = document.getElementById('filter-all');
     const unreadBtn = document.getElementById('filter-unread');
+    const savedBtn = document.getElementById('filter-saved');
     const articles = document.querySelectorAll('article');
     
     console.log('Found', articles.length, 'articles'); // Debug log
     
     // Update button styles
-    if (filter === 'all') {
-        allBtn.className = 'px-3 py-1 text-sm rounded-full bg-primary dark:bg-blue-600 text-white';
-        unreadBtn.className = 'px-3 py-1 text-sm rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors';
-    } else {
-        allBtn.className = 'px-3 py-1 text-sm rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors';
-        unreadBtn.className = 'px-3 py-1 text-sm rounded-full bg-primary dark:bg-blue-600 text-white';
-    }
+    const activeClass = 'px-3 py-1 text-sm rounded-full bg-primary dark:bg-blue-600 text-white';
+    const inactiveClass = 'px-3 py-1 text-sm rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors';
+    
+    allBtn.className = filter === 'all' ? activeClass : inactiveClass;
+    unreadBtn.className = filter === 'unread' ? activeClass : inactiveClass;
+    savedBtn.className = filter === 'saved' ? activeClass : inactiveClass;
     
     // Filter articles
     articles.forEach((article, index) => {
         const readBtn = article.querySelector('[id^="read-btn-"]');
+        const saveBtn = article.querySelector('[id^="save-btn-"]');
         const isRead = readBtn && (readBtn.classList.contains('bg-green-100') || readBtn.className.includes('bg-green-100'));
+        const isSaved = saveBtn && (saveBtn.classList.contains('bg-yellow-100') || saveBtn.className.includes('bg-yellow-100'));
         
-        console.log(`Article ${index + 1}: isRead = ${isRead}`); // Debug log
+        console.log(`Article ${index + 1}: isRead = ${isRead}, isSaved = ${isSaved}`); // Debug log
         
-        if (filter === 'all' || (filter === 'unread' && !isRead)) {
-            article.style.display = 'block';
-        } else {
-            article.style.display = 'none';
+        let showArticle = false;
+        if (filter === 'all') {
+            showArticle = true;
+        } else if (filter === 'unread' && !isRead) {
+            showArticle = true;
+        } else if (filter === 'saved' && isSaved) {
+            showArticle = true;
         }
+        
+        article.style.display = showArticle ? 'block' : 'none';
     });
 }
 

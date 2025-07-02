@@ -552,3 +552,89 @@ class RSSService:
                 embedded_videos.add(video_id)
         
         return modified_content
+
+    async def get_categories_with_articles(self, limit: int = 5, filter: str = "all"):
+        """Get all categories with their recent articles (limited per category)."""
+        categories_data = {}
+        
+        # Get all categories
+        categories_result = await self.db.execute(
+            select(Feed.category).distinct().where(Feed.is_active == True)
+        )
+        categories = [row[0] for row in categories_result.fetchall()]
+        
+        for category in categories:
+            # Get feeds in this category
+            feeds_result = await self.db.execute(
+                select(Feed).where(Feed.category == category, Feed.is_active == True)
+            )
+            feeds = feeds_result.scalars().all()
+            feed_ids = [feed.id for feed in feeds]
+            
+            if not feed_ids:
+                continue
+                
+            # Build article query based on filter
+            article_query = select(Article).where(Article.feed_id.in_(feed_ids))
+            
+            if filter == "unread":
+                article_query = article_query.where(Article.is_read == False)
+            elif filter == "saved":
+                article_query = article_query.where(Article.is_saved == True)
+            # "all" doesn't need additional filtering
+            
+            article_query = article_query.order_by(desc(Article.published_date)).limit(limit)
+            
+            articles_result = await self.db.execute(article_query)
+            articles = articles_result.scalars().all()
+            
+            if articles:  # Only include categories that have articles matching the filter
+                categories_data[category] = {
+                    'feeds': feeds,
+                    'articles': articles,
+                    'total_articles': len(articles)
+                }
+        
+        return categories_data
+
+    async def get_articles_by_category(self, category_name: str, page: int = 1, per_page: int = 20):
+        """Get articles for a specific category with pagination."""
+        # Get feeds in this category
+        feeds_result = await self.db.execute(
+            select(Feed).where(Feed.category == category_name, Feed.is_active == True)
+        )
+        feeds = feeds_result.scalars().all()
+        feed_ids = [feed.id for feed in feeds]
+        
+        if not feed_ids:
+            return []
+        
+        # Calculate offset
+        offset = (page - 1) * per_page
+        
+        # Get articles with pagination
+        articles_result = await self.db.execute(
+            select(Article)
+            .where(Article.feed_id.in_(feed_ids))
+            .order_by(desc(Article.published_date))
+            .offset(offset)
+            .limit(per_page)
+        )
+        
+        return articles_result.scalars().all()
+
+    async def get_feeds_by_category(self):
+        """Get feeds organized by category."""
+        feeds_result = await self.db.execute(
+            select(Feed).where(Feed.is_active == True).order_by(Feed.category, Feed.title)
+        )
+        feeds = feeds_result.scalars().all()
+        
+        feeds_by_category = {}
+        for feed in feeds:
+            category = feed.category or "General"
+            if category not in feeds_by_category:
+                feeds_by_category[category] = []
+            feeds_by_category[category].append(feed)
+        
+        return feeds_by_category
