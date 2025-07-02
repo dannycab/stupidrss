@@ -5,6 +5,9 @@ docker-compose.yml
 # Local data directory
 data/
 
+# Documentation (GitHub Pages only)
+docs/
+
 # Development files
 .env
 .env.local
