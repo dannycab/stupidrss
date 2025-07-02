@@ -35,6 +35,19 @@
             {% for article in articles %}
             <article class="p-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                 <div class="flex items-start justify-between">
+                    <!-- YouTube thumbnail (if applicable) -->
+                    {% set youtube_id = article.link | youtube_id %}
+                    {% if youtube_id %}
+                    <div class="flex-shrink-0 mr-4">
+                        <img 
+                            src="{{ article.link | youtube_thumbnail }}" 
+                            alt="Video thumbnail"
+                            class="w-32 h-24 object-cover rounded-lg border border-gray-200 dark:border-gray-600"
+                            loading="lazy"
+                        />
+                    </div>
+                    {% endif %}
+                    
                     <div class="flex-1">
                         <h2 class="text-xl font-medium text-gray-900 dark:text-white mb-3">
                             <a href="/articles/{{ article.id }}" 
@@ -45,7 +58,11 @@
                         
                         {% if article.description %}
                         <p class="text-gray-600 dark:text-gray-300 mb-4 leading-relaxed">
-                            {{ article.description }}
+                            {% if youtube_id %}
+                                {{ article.description | clean_youtube }}
+                            {% else %}
+                                {{ article.description }}
+                            {% endif %}
                         </p>
                         {% endif %}
                         

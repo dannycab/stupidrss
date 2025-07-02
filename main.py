@@ -24,6 +24,7 @@ import uvicorn
 from contextlib import asynccontextmanager
 from pydantic import BaseModel
 from datetime import datetime
+import re
 
 from models.database import init_db, get_db
 from services.rss_service import RSSService
@@ -49,6 +50,61 @@ async def lifespan(app: FastAPI):
     await init_db()
     yield
 
+def extract_youtube_id(url):
+    """Extract YouTube video ID from URL"""
+    if not url:
+        return ""
+    
+    patterns = [
+        r'(?:https?://)?(?:www\.)?youtube\.com/watch\?v=([a-zA-Z0-9_-]{11})',
+        r'(?:https?://)?(?:www\.)?youtu\.be/([a-zA-Z0-9_-]{11})',
+        r'(?:https?://)?(?:www\.)?youtube\.com/embed/([a-zA-Z0-9_-]{11})',
+        r'(?:https?://)?(?:www\.)?youtube\.com/v/([a-zA-Z0-9_-]{11})',
+        r'(?:https?://)?(?:m\.)?youtube\.com/watch\?v=([a-zA-Z0-9_-]{11})',
+    ]
+    
+    for pattern in patterns:
+        match = re.search(pattern, url)
+        if match:
+            return match.group(1)
+    return ""
+
+def clean_youtube_description(text):
+    """Clean up YouTube RSS description text"""
+    if not text:
+        return ""
+    
+    # Remove common YouTube spam
+    lines = text.split('\n')
+    cleaned_lines = []
+    
+    for line in lines:
+        line = line.strip()
+        # Skip lines with URLs
+        if 'http' in line or 'www.' in line:
+            continue
+        # Skip lines with donate/volunteer requests
+        if any(word in line.lower() for word in ['donate', 'volunteer', 'nonprofit', '501(c)', 'help!']):
+            continue
+        # Skip chapter markers (timestamps)
+        if re.match(r'^\d{1,2}:\d{2}', line):
+            continue
+        # Skip separator lines
+        if line in ['------------------', '---', '===']:
+            continue
+        # Keep the line if it's substantial
+        if len(line) > 10:
+            cleaned_lines.append(line)
+    
+    # Take only first 3 lines to keep it concise
+    return '\n'.join(cleaned_lines[:3])
+
+def youtube_thumbnail_url(url):
+    """Generate YouTube thumbnail URL from video URL"""
+    video_id = extract_youtube_id(url)
+    if video_id:
+        return f"https://img.youtube.com/vi/{video_id}/mqdefault.jpg"
+    return ""
 
 app = FastAPI(title="StupidRSS", description="A minimalistic RSS reader", lifespan=lifespan)
 
@@ -58,6 +114,11 @@ app.mount("/docs-static", StaticFiles(directory="docs"), name="docs-static")
 
 # Templates
 templates = Jinja2Templates(directory="templates")
+
+# Add custom filters
+templates.env.filters['youtube_id'] = extract_youtube_id
+templates.env.filters['clean_youtube'] = clean_youtube_description
+templates.env.filters['youtube_thumbnail'] = youtube_thumbnail_url
 
 
 @app.get("/", response_class=HTMLResponse)
