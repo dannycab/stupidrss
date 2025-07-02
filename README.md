@@ -23,6 +23,9 @@ A fast, minimalistic RSS reader webapp built with FastAPI and Tailwind CSS.
 - 📺 **YouTube-Optimized**: Removes spam and duplicate content from video feeds
 - 🎯 **Enhanced UX**: Streamlined buttons, improved navigation, and consistent UI
 - 🔍 **Filter Support**: Built-in article filtering and search capabilities
+- 📂 **Category Organization**: Organize feeds by categories with dedicated category pages
+- 🔖 **Advanced Filtering**: Filter articles by All, Unread, and Saved across all pages
+- 🧭 **Intuitive Navigation**: Sidebar navigation on secondary pages, clean header design
 
 ## Tech Stack
 
@@ -78,6 +81,14 @@ A fast, minimalistic RSS reader webapp built with FastAPI and Tailwind CSS.
 - `DELETE /feeds/{id}` - Delete feed
 - `POST /feeds/{id}/refresh` - Refresh feed
 
+### 📂 **Page Routes:**
+- `GET /` - Main feed and article overview
+- `GET /categories` - Categories overview with article previews
+- `GET /categories/{category}` - Individual category article listings
+- `GET /saved` - Saved articles page
+- `GET /articles/{id}` - Individual article view
+- `GET /admin` - Feed management and admin panel
+
 ## Development
 
 ### Running in development mode:
@@ -128,6 +139,28 @@ Simply click "Add Feed" and paste any RSS/Atom feed URL. The app will:
 - Streamlined feed display on the home page
 - Working filter buttons for article management
 - Consistent UI styling and responsive design
+
+## Category Management
+
+**Organize Your Feeds**: StupidRSS now includes comprehensive category support:
+
+**Categories Overview** (`/categories`):
+- View all categories with recent articles (5 per category)
+- Filter by All, Unread, or Saved articles across categories
+- Click category names to view all articles in that category
+- Clean sidebar navigation for easy access to other sections
+
+**Individual Category Pages** (`/categories/{category}`):
+- Full article listings for specific categories
+- Same filtering options as main page (All, Unread, Saved)
+- Sidebar shows all feeds within that category
+- Maintains all read/save functionality from main page
+
+**Navigation Structure**:
+- **Main Page**: Full top navigation with Categories, Saved, Admin links
+- **Secondary Pages**: Clean header with sidebar navigation
+- **Consistent Experience**: Same functionality across all pages
+- **Responsive Design**: Adapts beautifully to all screen sizes
 
 ## API Endpoints
 
