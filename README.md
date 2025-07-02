@@ -2,7 +2,7 @@
 
 A fast, minimalistic RSS reader webapp built with FastAPI and Tailwind CSS.
 
-🌐 **Live Demo**: [Documentation](https://dannycab.github.io/stupidrss)  
+🌐 **Live Demo**: [Documentation](http://dannycaballero.info/stupidrss)  
 🔗 **GitHub**: https://github.com/dannycab/stupidrss
 
 ## Features
