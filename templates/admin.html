@@ -439,8 +439,14 @@ async function markAllRead() {
 
 // Import OPML file
 async function importOpml(input) {
+    console.log('Starting OPML import...');
     const file = input.files[0];
-    if (!file) return;
+    if (!file) {
+        console.log('No file selected');
+        return;
+    }
+    
+    console.log('Selected file:', file.name, 'Size:', file.size, 'Type:', file.type);
     
     // Validate file type
     if (!file.name.toLowerCase().endsWith('.opml') && !file.name.toLowerCase().endsWith('.xml')) {
@@ -458,7 +464,13 @@ async function importOpml(input) {
     formData.append('file', file);
     
     // Show loading indicator
-    const importButton = document.querySelector('button[onclick*="importOpml"]');
+    const importButton = document.querySelector('button[onclick*="opml-file-input"]');
+    if (!importButton) {
+        console.error('Could not find import button');
+        alert('Error: Could not find import button element');
+        return;
+    }
+    
     const originalText = importButton.innerHTML;
     importButton.innerHTML = '<svg class="w-4 h-4 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>Importing...';
     importButton.disabled = true;
@@ -470,6 +482,7 @@ async function importOpml(input) {
         });
         
         const result = await response.json();
+        console.log('OPML import result:', result);
         
         if (response.ok) {
             let message = `OPML Import Results\n`;
@@ -517,27 +530,28 @@ async function importOpml(input) {
                 });
             }
             
-            // Show the detailed report in a modal or alert
-            if (result.imported_count > 0 || (result.errors && result.errors.length > 0)) {
-                // For better UX, create a modal dialog instead of alert for large content
-                showImportResultsModal(message, result);
-            } else {
-                alert(message);
-            }
+            // Always show results, even if no feeds were imported
+            showImportResultsModal(message, result);
             
+            // Only reload if feeds were actually imported
             if (result.imported_count > 0) {
-                location.reload();
+                setTimeout(() => {
+                    location.reload();
+                }, 1500); // Give user time to see the results
             }
         } else {
+            console.error('Import failed with status:', response.status);
             alert(`Import failed: ${result.detail || 'Unknown error'}`);
         }
     } catch (error) {
         console.error('Error importing OPML:', error);
-        alert('Failed to import OPML file. Please check the file format and try again.');
+        alert(`Failed to import OPML file: ${error.message}\n\nPlease check the file format and try again.`);
     } finally {
         // Restore button state
-        importButton.innerHTML = originalText;
-        importButton.disabled = false;
+        if (importButton) {
+            importButton.innerHTML = originalText;
+            importButton.disabled = false;
+        }
         
         // Clear the input
         input.value = '';
@@ -546,6 +560,9 @@ async function importOpml(input) {
 
 // Show import results in a modal dialog
 function showImportResultsModal(message, result) {
+    console.log('Showing import results modal with message length:', message.length);
+    console.log('Result object:', result);
+    
     // Create modal if it doesn't exist
     let modal = document.getElementById('import-results-modal');
     if (!modal) {
@@ -585,34 +602,15 @@ function closeImportResultsModal() {
         modal.classList.remove('flex');
     }
 }
-            }
-            
-            if (result.imported_feeds && result.imported_feeds.length > 0) {
-                message += `\nImported feeds:\n`;
-                result.imported_feeds.forEach(feed => {
-                    message += `• ${feed.title} (${feed.category})\n`;
-                });
-            }
-            
-            alert(message);
-            location.reload();
-        } else {
-            alert(`Import failed: ${result.detail || 'Unknown error'}`);
-        }
-    } catch (error) {
-        console.error('Error importing OPML:', error);
-        alert('Failed to import OPML file. Please check the file format and try again.');
-    }
-    
-    // Clear the input
-    input.value = '';
-}
 
 // Close modal when clicking outside
-document.getElementById('edit-modal').addEventListener('click', (e) => {
-    if (e.target === e.currentTarget) {
-        closeEditModal();
-    }
-});
+const editModal = document.getElementById('edit-modal');
+if (editModal) {
+    editModal.addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) {
+            closeEditModal();
+        }
+    });
+}
 </script>
 {% endblock %}
