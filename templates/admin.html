@@ -141,99 +141,9 @@
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <!-- Feed Management -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 transition-colors">
-            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
-                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Feed Management</h2>
-            </div>
-            <div class="p-6">
-                {% if feeds_by_category %}
-                    {% for category, category_feeds in feeds_by_category.items() %}
-                    <div class="mb-6 last:mb-0">
-                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
-                            {{ category }} ({{ category_feeds|length }})
-                        </h3>
-                        <div class="space-y-3">
-                            {% for feed in category_feeds %}
-                            <div class="flex items-center justify-between p-3 border border-gray-100 dark:border-gray-600 rounded-lg">
-                                <div class="flex-1">
-                                    <div class="flex items-center space-x-2">
-                                        <h4 class="text-sm font-medium text-gray-900 dark:text-white">{{ feed.title }}</h4>
-                                        {% if not feed.is_active %}
-                                        <span class="px-2 py-1 text-xs bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-full">
-                                            Inactive
-                                        </span>
-                                        {% endif %}
-                                    </div>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                        {{ feed.url }} • {{ feed.articles|length }} articles
-                                    </p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">
-                                        Last updated: {{ feed.last_updated.strftime('%m/%d/%Y %H:%M') if feed.last_updated else 'Never' }}
-                                    </p>
-                                </div>
-                                <div class="flex items-center space-x-1 ml-2">
-                                    <button 
-                                        onclick="editFeed({{ feed.id }}, '{{ feed.title }}', '{{ feed.category }}')"
-                                        class="p-1 text-gray-400 dark:text-gray-500 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
-                                        title="Edit"
-                                    >
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                        </svg>
-                                    </button>
-                                    <button 
-                                        onclick="refreshFeed({{ feed.id }})"
-                                        class="p-1 text-gray-400 dark:text-gray-500 hover:text-green-500 dark:hover:text-green-400 transition-colors"
-                                        title="Refresh"
-                                    >
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                                        </svg>
-                                    </button>
-                                    <button 
-                                        onclick="deleteFeedWithConfirmation({{ feed.id }}, '{{ feed.title }}')"
-                                        class="p-1 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 transition-colors"
-                                        title="Delete"
-                                    >
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                    {% endfor %}
-                {% else %}
-                    <p class="text-gray-500 dark:text-gray-400 text-center py-4">No feeds available</p>
-                {% endif %}
-            </div>
-        </div>
-
-        <!-- Quick Actions -->
+        <!-- Left Column: Quick Actions (top), Categories (bottom) -->
         <div class="space-y-8">
-            <!-- Categories -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 transition-colors">
-                <div class="p-6 border-b border-gray-200 dark:border-gray-700">
-                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Categories</h2>
-                </div>
-                <div class="p-6">
-                    <div class="grid grid-cols-2 gap-4">
-                        {% for category in stats.categories %}
-                        <div class="flex items-center justify-between p-3 border border-gray-100 dark:border-gray-600 rounded-lg">
-                            <span class="text-sm font-medium text-gray-900 dark:text-white">{{ category }}</span>
-                            <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded">
-                                {{ feeds_by_category[category]|length }}
-                            </span>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-
-            <!-- Quick Actions -->
+            <!-- Quick Actions (top) -->
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 transition-colors">
                 <div class="p-6 border-b border-gray-200 dark:border-gray-700">
                     <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Quick Actions</h2>
@@ -300,6 +210,104 @@
                 </div>
             </div>
         </div>
+        <!-- Right Column: Feed Management -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 transition-colors">
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Feed Management</h2>
+                        <button onclick="toggleAddForm()" 
+                                class="inline-flex items-center px-2 py-1 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors text-sm">
+                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                            Add Feed
+                        </button>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="expandAllCategories()" 
+                                class="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors">
+                            Expand All
+                        </button>
+                        <div class="h-3 border-l border-gray-300 dark:border-gray-600"></div>
+                        <button onclick="collapseAllCategories()" 
+                                class="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors">
+                            Collapse All
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div id="feed-mgmt-content" class="p-6">
+                {% if feeds_by_category %}
+                    {% for category, category_feeds in feeds_by_category.items() %}
+                    <div class="mb-4 last:mb-0" id="category-{{ category|replace(' ', '-')|lower }}">
+                        <button onclick="toggleCategory('{{ category|replace(' ', '-')|lower }}')" 
+                                class="w-full flex items-center justify-between py-2 px-3 bg-gray-100 dark:bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors mb-2">
+                            <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                                {{ category }} ({{ category_feeds|length }})
+                            </h3>
+                            <svg class="w-5 h-5 transform transition-transform category-toggle-icon" id="category-toggle-{{ category|replace(' ', '-')|lower }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div class="space-y-3 pl-2 category-content" id="category-content-{{ category|replace(' ', '-')|lower }}">
+                            {% for feed in category_feeds %}
+                            <div class="flex items-center justify-between p-3 border border-gray-100 dark:border-gray-600 rounded-lg">
+                                <div class="flex-1">
+                                    <div class="flex items-center space-x-2">
+                                        <h4 class="text-sm font-medium text-gray-900 dark:text-white">{{ feed.title }}</h4>
+                                        {% if not feed.is_active %}
+                                        <span class="px-2 py-1 text-xs bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-full">
+                                            Inactive
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                        {{ feed.url }} • {{ feed.articles|length }} articles
+                                    </p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                                        Last updated: {{ feed.last_updated.strftime('%m/%d/%Y %H:%M') if feed.last_updated else 'Never' }}
+                                    </p>
+                                </div>
+                                <div class="flex items-center space-x-1 ml-2">
+                                    <button 
+                                        onclick="editFeed({{ feed.id }}, '{{ feed.title }}', '{{ feed.category }}')"
+                                        class="p-1 text-gray-400 dark:text-gray-500 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
+                                        title="Edit"
+                                    >
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                        </svg>
+                                    </button>
+                                    <button 
+                                        onclick="refreshFeed({{ feed.id }})"
+                                        class="p-1 text-gray-400 dark:text-gray-500 hover:text-green-500 dark:hover:text-green-400 transition-colors"
+                                        title="Refresh"
+                                    >
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                        </svg>
+                                    </button>
+                                    <button 
+                                        onclick="deleteFeedWithConfirmation({{ feed.id }}, '{{ feed.title }}')"
+                                        class="p-1 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+                                        title="Delete"
+                                    >
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-gray-500 dark:text-gray-400 text-center py-4">No feeds available</p>
+                {% endif %}
+            </div>
+        </div>
     </div>
 </div>
 
@@ -342,6 +350,43 @@
                 </button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="delete-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md mx-4">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Delete Feed</h3>
+        <p class="text-gray-600 dark:text-gray-400 mb-4">Are you sure you want to delete "<span id="delete-feed-title" class="font-medium"></span>"?</p>
+        <p class="text-gray-600 dark:text-gray-400 mb-6">This will permanently delete the feed and all its articles. This action cannot be undone.</p>
+        
+        <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 mb-6">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Type DELETE to confirm:</label>
+            <input 
+                type="text" 
+                id="delete-confirmation-input"
+                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                placeholder="DELETE"
+            >
+        </div>
+        
+        <div class="flex justify-end space-x-3">
+            <button 
+                type="button"
+                onclick="closeDeleteModal()"
+                class="px-4 py-2 text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+            >
+                Cancel
+            </button>
+            <button 
+                type="button"
+                id="confirm-delete-button"
+                class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors opacity-50 cursor-not-allowed"
+                disabled
+            >
+                Delete Feed
+            </button>
+        </div>
     </div>
 </div>
 
@@ -398,6 +443,112 @@
 <script>
 let currentEditFeedId = null;
 
+// Collapsible Feed Management
+function toggleFeedManagement() {
+    const content = document.getElementById('feed-mgmt-content');
+    const icon = document.getElementById('feed-mgmt-toggle-icon');
+    
+    if (content.classList.contains('hidden')) {
+        // Expand the entire feed management section
+        content.classList.remove('hidden');
+        icon.classList.add('rotate-180');
+    } else {
+        // Collapse the entire feed management section
+        content.classList.add('hidden');
+        icon.classList.remove('rotate-180');
+    }
+}
+
+// Collapsible Categories
+function toggleCategory(categoryId) {
+    const content = document.getElementById(`category-content-${categoryId}`);
+    const icon = document.getElementById(`category-toggle-${categoryId}`);
+    
+    if (content.classList.contains('hidden')) {
+        // Expand this category
+        content.classList.remove('hidden');
+        icon.classList.add('rotate-180');
+    } else {
+        // Collapse this category
+        content.classList.add('hidden');
+        icon.classList.remove('rotate-180');
+    }
+    
+    // Save the current expanded/collapsed state
+    saveExpandedCategoriesState();
+}
+
+// Expand all categories
+function expandAllCategories() {
+    const categoryContents = document.querySelectorAll('.category-content');
+    const categoryIcons = document.querySelectorAll('.category-toggle-icon');
+    
+    categoryContents.forEach(content => {
+        content.classList.remove('hidden');
+    });
+    
+    categoryIcons.forEach(icon => {
+        icon.classList.add('rotate-180');
+    });
+    
+    // Save the expanded state
+    saveExpandedCategoriesState();
+    
+    console.log('All categories expanded');
+}
+
+// Collapse all categories
+function collapseAllCategories() {
+    const categoryContents = document.querySelectorAll('.category-content');
+    const categoryIcons = document.querySelectorAll('.category-toggle-icon');
+    
+    categoryContents.forEach(content => {
+        content.classList.add('hidden');
+    });
+    
+    categoryIcons.forEach(icon => {
+        icon.classList.remove('rotate-180');
+    });
+    
+    // Save the collapsed state (which is empty)
+    sessionStorage.setItem('expandedCategories', JSON.stringify([]));
+    
+    console.log('All categories collapsed');
+}
+
+// Initialize the feed management pane and categories
+document.addEventListener('DOMContentLoaded', function() {
+    // Feed Management section should be visible by default now, not collapsed
+    const content = document.getElementById('feed-mgmt-content');
+    
+    // Initially collapse all categories
+    const categoryContents = document.querySelectorAll('.category-content');
+    categoryContents.forEach(content => {
+        content.classList.add('hidden');
+    });
+    
+    // Reset all category toggle icons to the collapsed state
+    const categoryIcons = document.querySelectorAll('.category-toggle-icon');
+    categoryIcons.forEach(icon => {
+        icon.classList.remove('rotate-180');
+    });
+    
+    // Then restore any previously expanded categories from session storage
+    restoreExpandedCategoriesState();
+        
+    // Set up the Add Feed section (hidden by default)
+    const addFeedSection = document.getElementById('add-feed-section');
+    if (addFeedSection) {
+        addFeedSection.classList.add('hidden');
+    }
+    
+    // Initialize delete modal input listeners
+    const deleteInput = document.getElementById('delete-confirmation-input');
+    if (deleteInput) {
+        deleteInput.value = ''; // Ensure it's empty on page load
+    }
+});
+
 // Edit feed modal
 function editFeed(feedId, title, category) {
     currentEditFeedId = feedId;
@@ -417,8 +568,19 @@ function closeEditModal() {
 document.getElementById('edit-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     
+    // Save current expanded state before submitting
+    saveExpandedCategoriesState();
+    
     const title = document.getElementById('edit-title').value;
     const category = document.getElementById('edit-category').value;
+    
+    // Show loading state on submit button
+    const submitButton = document.querySelector('#edit-form button[type="submit"]');
+    const originalButtonText = submitButton.textContent;
+    submitButton.innerHTML = `<svg class="w-4 h-4 mr-2 animate-spin inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+    </svg> Saving...`;
+    submitButton.disabled = true;
     
     try {
         const response = await fetch(`/api/feeds/${currentEditFeedId}`, {
@@ -430,29 +592,254 @@ document.getElementById('edit-form').addEventListener('submit', async (e) => {
         if (response.ok) {
             closeEditModal();
             location.reload();
+        } else {
+            // Show error message
+            submitButton.innerHTML = originalButtonText;
+            submitButton.disabled = false;
+            alert('Failed to update feed. Please try again.');
         }
     } catch (error) {
         console.error('Error updating feed:', error);
+        submitButton.innerHTML = originalButtonText;
+        submitButton.disabled = false;
+        alert('Error updating feed: ' + error.message);
     }
 });
 
+// Delete feed with confirmation
+function deleteFeedWithConfirmation(feedId, feedTitle) {
+    // Set the feed title in the delete modal
+    document.getElementById('delete-feed-title').textContent = feedTitle;
+    
+    // Clear the confirmation input
+    const input = document.getElementById('delete-confirmation-input');
+    input.value = '';
+    
+    // Disable the confirm button initially
+    document.getElementById('confirm-delete-button').disabled = true;
+    document.getElementById('confirm-delete-button').classList.add('opacity-50', 'cursor-not-allowed');
+    
+    // Show the delete modal
+    document.getElementById('delete-modal').classList.remove('hidden');
+    document.getElementById('delete-modal').classList.add('flex');
+    
+    // Store the feed ID in a global variable for deletion
+    window.currentDeleteFeedId = feedId;
+}
+
+// Close the delete modal
+function closeDeleteModal() {
+    document.getElementById('delete-modal').classList.add('hidden');
+    document.getElementById('delete-modal').classList.remove('flex');
+    
+    // Reset the modal state
+    document.getElementById('delete-confirmation-input').value = '';
+    const confirmButton = document.getElementById('confirm-delete-button');
+    confirmButton.disabled = true;
+    confirmButton.classList.add('opacity-50', 'cursor-not-allowed');
+    confirmButton.innerHTML = 'Delete Feed';
+    
+    // Clear the feed ID
+    window.currentDeleteFeedId = null;
+}
+
+// Event listener for the delete confirmation input
+document.getElementById('delete-confirmation-input').addEventListener('input', function() {
+    const confirmButton = document.getElementById('confirm-delete-button');
+    if (this.value.trim() === 'DELETE') {
+        confirmButton.disabled = false;
+        confirmButton.classList.remove('opacity-50', 'cursor-not-allowed');
+    } else {
+        confirmButton.disabled = true;
+        confirmButton.classList.add('opacity-50', 'cursor-not-allowed');
+    }
+});
+
+// Add ENTER key support for the delete confirmation modal
+document.getElementById('delete-confirmation-input').addEventListener('keydown', function(event) {
+    if (event.key === 'Enter') {
+        // Prevent the default form submission action
+        event.preventDefault();
+        
+        // If the confirm button is enabled, click it
+        const confirmButton = document.getElementById('confirm-delete-button');
+        if (!confirmButton.disabled) {
+            confirmButton.click();
+        } else if (this.value.trim() !== 'DELETE') {
+            // Show a hint if the user tries to press Enter without typing DELETE
+            alert('Please type DELETE to confirm deletion');
+        }
+    }
+});
+
+// Handle delete confirmation
+document.getElementById('confirm-delete-button').addEventListener('click', async () => {
+    const input = document.getElementById('delete-confirmation-input');
+    if (input.value.trim() !== 'DELETE') {
+        alert('Please type DELETE to confirm.');
+        return;
+    }
+    
+    // Disable the button and show loading state
+    const confirmButton = document.getElementById('confirm-delete-button');
+    const originalButtonText = confirmButton.innerText;
+    confirmButton.disabled = true;
+    confirmButton.classList.add('opacity-50', 'cursor-not-allowed');
+    confirmButton.innerHTML = `<svg class="w-4 h-4 mr-2 inline animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+    </svg> Deleting...`;
+    
+    // Proceed with deletion
+    try {
+        const response = await fetch(`/feeds/${window.currentDeleteFeedId}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            // Close the modal and reload the page while preserving expanded categories
+            closeDeleteModal();
+            saveExpandedCategoriesState();
+            location.reload();
+        } else {
+            // Restore button
+            confirmButton.innerHTML = originalButtonText;
+            confirmButton.disabled = false;
+            confirmButton.classList.remove('opacity-50', 'cursor-not-allowed');
+            
+            alert('Failed to delete feed. Please try again.');
+        }
+    } catch (error) {
+        // Restore button
+        confirmButton.innerHTML = originalButtonText;
+        confirmButton.disabled = false;
+        confirmButton.classList.remove('opacity-50', 'cursor-not-allowed');
+        
+        console.error('Error deleting feed:', error);
+        alert('An error occurred while deleting the feed.');
+    }
+});
+
+// Add ESC key listener to close modals
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        // Close delete modal if it's open
+        const deleteModal = document.getElementById('delete-modal');
+        if (!deleteModal.classList.contains('hidden')) {
+            closeDeleteModal();
+        }
+        
+        // Close edit modal if it's open
+        const editModal = document.getElementById('edit-modal');
+        if (editModal && !editModal.classList.contains('hidden')) {
+            closeEditModal();
+        }
+    }
+});
+
+// Store expanded categories in session storage to maintain state after page actions
+function saveExpandedCategoriesState() {
+    const expandedCategories = [];
+    document.querySelectorAll('.category-content').forEach(content => {
+        const categoryId = content.id.replace('category-content-', '');
+        if (!content.classList.contains('hidden')) {
+            expandedCategories.push(categoryId);
+        }
+    });
+    sessionStorage.setItem('expandedCategories', JSON.stringify(expandedCategories));
+    console.log('Saved expanded categories:', expandedCategories);
+}
+
+// Restore expanded categories from session storage
+function restoreExpandedCategoriesState() {
+    try {
+        const expandedCategories = JSON.parse(sessionStorage.getItem('expandedCategories')) || [];
+        console.log('Restoring expanded categories:', expandedCategories);
+        
+        expandedCategories.forEach(categoryId => {
+            const content = document.getElementById(`category-content-${categoryId}`);
+            const icon = document.getElementById(`category-toggle-${categoryId}`);
+            if (content && icon) {
+                content.classList.remove('hidden');
+                icon.classList.add('rotate-180');
+            }
+        });
+    } catch (error) {
+        console.error('Error restoring category states:', error);
+    }
+}
+
 // Refresh single feed
 async function refreshFeed(feedId) {
+    // Save current state
+    saveExpandedCategoriesState();
+    
     try {
-        const response = await fetch(`/feeds/${feedId}/refresh`, {
-            method: 'POST'
-        });
-        if (response.ok) {
-            location.reload();
+        // Show loading spinner for this feed
+        const refreshButton = document.querySelector(`button[onclick="refreshFeed(${feedId})"]`);
+        if (refreshButton) {
+            const originalHTML = refreshButton.innerHTML;
+            refreshButton.innerHTML = `<svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>`;
+            refreshButton.disabled = true;
+            
+            const response = await fetch(`/feeds/${feedId}/refresh`, {
+                method: 'POST'
+            });
+            
+            if (response.ok) {
+                // Success - reload page but maintain expanded state
+                location.reload();
+            } else {
+                // Error - restore button
+                refreshButton.innerHTML = originalHTML;
+                refreshButton.disabled = false;
+                alert('Error refreshing feed. Please try again.');
+            }
+        } else {
+            // Button not found, just make the request
+            const response = await fetch(`/feeds/${feedId}/refresh`, {
+                method: 'POST'
+            });
+            if (response.ok) {
+                // Save state and reload
+                saveExpandedCategoriesState();
+                location.reload();
+            } else {
+                alert('Error refreshing feed. Please try again.');
+            }
         }
     } catch (error) {
         console.error('Error refreshing feed:', error);
+        alert('Error refreshing feed: ' + error.message);
+        
+        // Restore button if it exists
+        const refreshButton = document.querySelector(`button[onclick="refreshFeed(${feedId})"]`);
+        if (refreshButton) {
+            refreshButton.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>`;
+            refreshButton.disabled = false;
+        }
     }
 }
 
 // Refresh all feeds
 async function refreshAllFeeds() {
     if (confirm('This will refresh all feeds. This may take a while. Continue?')) {
+        // Save expanded categories state
+        saveExpandedCategoriesState();
+        
+        // Show loading on the refresh button
+        const refreshButton = document.querySelector('button[onclick="refreshAllFeeds()"]');
+        if (refreshButton) {
+            const originalHTML = refreshButton.innerHTML;
+            refreshButton.innerHTML = `<svg class="w-4 h-4 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg> Refreshing...`;
+            refreshButton.disabled = true;
+        }
+        
         try {
             const response = await fetch('/api/feeds/refresh-all', {
                 method: 'POST'
@@ -460,9 +847,20 @@ async function refreshAllFeeds() {
             if (response.ok) {
                 alert('All feeds refreshed successfully!');
                 location.reload();
+            } else {
+                if (refreshButton) {
+                    refreshButton.innerHTML = originalHTML;
+                    refreshButton.disabled = false;
+                }
+                alert('Error refreshing feeds. Please try again.');
             }
         } catch (error) {
             console.error('Error refreshing all feeds:', error);
+            if (refreshButton) {
+                refreshButton.innerHTML = originalHTML;
+                refreshButton.disabled = false;
+            }
+            alert('Error refreshing all feeds: ' + error.message);
         }
     }
 }
@@ -470,6 +868,19 @@ async function refreshAllFeeds() {
 // Mark all articles as read
 async function markAllRead() {
     if (confirm('This will mark ALL unread articles as read. Continue?')) {
+        // Save expanded categories state
+        saveExpandedCategoriesState();
+        
+        // Show loading on the button
+        const markReadButton = document.querySelector('button[onclick="markAllRead()"]');
+        if (markReadButton) {
+            const originalHTML = markReadButton.innerHTML;
+            markReadButton.innerHTML = `<svg class="w-4 h-4 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg> Marking...`;
+            markReadButton.disabled = true;
+        }
+        
         try {
             const response = await fetch('/api/articles/mark-all-read', {
                 method: 'POST'
@@ -477,9 +888,20 @@ async function markAllRead() {
             if (response.ok) {
                 alert('All articles marked as read!');
                 location.reload();
+            } else {
+                if (markReadButton) {
+                    markReadButton.innerHTML = originalHTML;
+                    markReadButton.disabled = false;
+                }
+                alert('Error marking articles as read. Please try again.');
             }
         } catch (error) {
             console.error('Error marking all as read:', error);
+            if (markReadButton) {
+                markReadButton.innerHTML = originalHTML;
+                markReadButton.disabled = false;
+            }
+            alert('Error marking articles as read: ' + error.message);
         }
     }
 }
@@ -674,6 +1096,12 @@ if (editModal) {
             closeEditModal();
         }
     });
+}
+
+// Toggle Add Feed Form
+function toggleAddForm() {
+    const addFeedSection = document.getElementById('add-feed-section');
+    addFeedSection.classList.toggle('hidden');
 }
 </script>
 {% endblock %}
