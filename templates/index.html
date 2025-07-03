@@ -160,38 +160,43 @@
             <div class="p-6 border-b border-gray-200 dark:border-gray-700">
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Recent Articles</h2>
-                    <div class="flex space-x-2">
+                    <div class="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:space-x-2">
+                        <!-- Category Filter Dropdown -->
                         <select 
                             id="category-filter"
                             onchange="filterByCategory(this.value)"
-                            class="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            class="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white w-full sm:w-auto"
                         >
                             <option value="all" {% if current_category == "all" %}selected{% endif %}>All Categories</option>
                             {% for category in feeds_by_category.keys() %}
                             <option value="{{ category }}" {% if current_category == category %}selected{% endif %}>{{ category }}</option>
                             {% endfor %}
                         </select>
-                        <button 
-                            onclick="filterArticles('all')"
-                            id="filter-all"
-                            class="px-3 py-1 text-sm rounded-full bg-primary dark:bg-blue-600 text-white"
-                        >
-                            All
-                        </button>
-                        <button 
-                            onclick="filterArticles('unread')"
-                            id="filter-unread"
-                            class="px-3 py-1 text-sm rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-                        >
-                            Unread
-                        </button>
-                        <button 
-                            onclick="filterArticles('saved')"
-                            id="filter-saved"
-                            class="px-3 py-1 text-sm rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-                        >
-                            Saved
-                        </button>
+                        
+                        <!-- Filter Buttons with improved mobile layout -->
+                        <div class="grid grid-cols-3 gap-2 w-full sm:w-auto sm:flex sm:space-x-2">
+                            <button 
+                                onclick="filterArticles('all')"
+                                id="filter-all"
+                                class="px-3 py-2 sm:py-1 text-sm rounded-full bg-primary dark:bg-blue-600 text-white w-full sm:w-auto flex justify-center items-center"
+                            >
+                                All
+                            </button>
+                            <button 
+                                onclick="filterArticles('unread')"
+                                id="filter-unread"
+                                class="px-3 py-2 sm:py-1 text-sm rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors w-full sm:w-auto flex justify-center items-center"
+                            >
+                                Unread
+                            </button>
+                            <button 
+                                onclick="filterArticles('saved')"
+                                id="filter-saved"
+                                class="px-3 py-2 sm:py-1 text-sm rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors w-full sm:w-auto flex justify-center items-center"
+                            >
+                                Saved
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -69,26 +69,26 @@
                     </div>
                 </div>
                 
-                <!-- Filter Buttons -->
-                <div class="flex items-center space-x-2">
+                <!-- Filter Buttons - Improved for mobile -->
+                <div class="grid grid-cols-3 gap-2 sm:flex sm:items-center sm:space-x-2">
                     <button 
                         onclick="filterArticles('all')"
                         id="filter-all"
-                        class="px-3 py-1 text-sm rounded-full bg-primary dark:bg-blue-600 text-white"
+                        class="px-3 py-2 sm:py-1 text-sm rounded-full bg-primary dark:bg-blue-600 text-white w-full sm:w-auto flex justify-center items-center"
                     >
                         All
                     </button>
                     <button 
                         onclick="filterArticles('unread')"
                         id="filter-unread"
-                        class="px-3 py-1 text-sm rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                        class="px-3 py-2 sm:py-1 text-sm rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors w-full sm:w-auto flex justify-center items-center"
                     >
                         Unread
                     </button>
                     <button 
                         onclick="filterArticles('saved')"
                         id="filter-saved"
-                        class="px-3 py-1 text-sm rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                        class="px-3 py-2 sm:py-1 text-sm rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors w-full sm:w-auto flex justify-center items-center"
                     >
                         Saved
                     </button>
