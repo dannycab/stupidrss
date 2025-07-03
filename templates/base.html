@@ -19,7 +19,7 @@
         }
     </script>
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 font-sans transition-colors">
+<body class="bg-gray-50 dark:bg-gray-900 font-sans transition-colors min-h-screen flex flex-col">
     <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center py-4">
@@ -60,7 +60,7 @@
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow">
         {% block content %}{% endblock %}
     </main>
 
@@ -200,5 +200,10 @@
     </script>
     
     {% block extra_js %}{% endblock %}
+    
+    <!-- Footer -->
+    <footer class="py-6 mt-12 text-center text-sm text-gray-500 dark:text-gray-400">
+        <p>Made with <span class="text-red-500">❤️</span> in Michigan</p>
+    </footer>
 </body>
 </html>

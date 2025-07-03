@@ -26,6 +26,7 @@ A fast, minimalistic RSS reader webapp built with FastAPI and Tailwind CSS.
 - 📂 **Category Organization**: Organize feeds by categories with dedicated category pages
 - 🔖 **Advanced Filtering**: Filter articles by All, Unread, and Saved across all pages
 - 🧭 **Intuitive Navigation**: Sidebar navigation on secondary pages, clean header design
+- ❤️ **Made with love**: Proudly made in Michigan
 
 ## Tech Stack
 
