@@ -27,6 +27,9 @@ from pydantic import BaseModel
 from datetime import datetime
 import re
 
+# Import version information
+from version import __version__
+
 from models.database import init_db, get_db
 from services.rss_service import RSSService
 from models.models import Feed, Article
@@ -235,7 +238,12 @@ def youtube_thumbnail_url(url):
         return f"https://img.youtube.com/vi/{video_id}/mqdefault.jpg"
     return ""
 
-app = FastAPI(title="StupidRSS", description="A minimalistic RSS reader", lifespan=lifespan)
+app = FastAPI(
+    title="StupidRSS",
+    description="A minimalistic RSS reader",
+    version=__version__,
+    lifespan=lifespan
+)
 
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
